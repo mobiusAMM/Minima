@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./Iwrapper.sol"
 import "@openzeppelin/contracts/ownership/Ownable.sol";
+import './openzeppelin-contracts@3.4.0/contracts/token/ERC20/IERC20.sol';
 
 interface IUbeswapRouter {
     function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external return (uint[] memory amounts);
@@ -64,5 +65,17 @@ contract UbeswapWrapper is IWrapper, Ownable {
         }
     }
 
-
+  function swap(
+    address tokenIn,
+    address tokenOut,
+    uint256 amountIn,
+    uint256 minAmountOut
+  ) public returns (uint256) {
+        address[2] memory path = [tokenIn, tokenOut];
+        uint time = block.timestamp;
+        IERC20(tokenIn).transferFrom(msg.sender, address(this));
+        require(IERC20(tokenIn).approve(address(ubeswap), amountIn), "Approval failed");
+        uint[] memory amounts = ubeswap.swapExactTokensForTokens(amountIn, minAmountOut, path, msg.sender, time + 30);
+        return amounts[amounts.length - 1];
+  }
 }
