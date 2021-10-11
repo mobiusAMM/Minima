@@ -3,20 +3,20 @@ pragma solidity ^0.8.0;
 
 interface IWrapper {
   function getQuotes(address tokenIn, uint256 amountIn)
-    public
+    external
     view
-    returns (address[] memory tokensOut, uint256[] amountsOut);
+    returns (uint256[] memory expectedOut, address[] memory tokensOut);
 
   function getQuote(
     address tokenIn,
     address tokenOut,
     uint256 amountIn
-  ) public view returns (uint256);
+  ) external view returns (uint256);
 
   function swap(
     address tokenIn,
     address tokenOut,
     uint256 amountIn,
     uint256 minAmountOut
-  ) public returns (uint256);
+  ) external returns (uint256);
 }
