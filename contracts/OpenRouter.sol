@@ -12,6 +12,8 @@ contract OpenRouter is Ownable {
     IERC20[] supportedTokens;
     mapping(address -> string) dexNames;
     uint256 numTokens;
+    uint256 fee = 5 * (10 ** 7);
+    uint256 FEE_DENOM = 10 ** 10;
 
     function addAmm(address dexAddress, string name) external onlyOwner {
         require(dexNames[dexAddress] == "", "DEX has alread been added");
@@ -109,5 +111,30 @@ contract OpenRouter is Ownable {
             }
         }
     }
+
+    function swap(address[] tokenPath, address[] exchangePath, uint256 amountIn, uint256 minAmountOut, address recipient) public returns (uint256 actualAmountOut) {
+        require (tokenPath.length > 1, "Path must contain atleast two tokens");
+        require(exchangePath.length == tokenPath.length - 1, "Exchange path incorrect length");
+        IERC20 inputToken = IERC20(tokenPath[0]);
+        require (inputToken.transferFrom(msg.sender, address(this), amountIn), "Transfer failed");
+        actualAmountOut = amountIn;
+        for (uint i = 0; i < exchangePath.length; i++) {
+            inputToken = IERC20(tokenPath[i]);
+            IERC20 outToken = IERC20(tokenPath[i + 1]);
+            uint256 startingBalance = outToken.balanceOf(address(this));
+            address exchange = exchangePath[i];
+            require (inputToken.approve(exchange, actualAmountOut), "Approval failed");
+
+            IWrapper(exchange).swap(inputToken, outToken, inputAmount, 0);
+            actualAmountOut = outToken.balanceOf(address(this)) - startingBalance;
+        }
+        uint256 swapFee = (actualAmountOut * fee) / FEE_DENOM;
+        actualAmountOut -= swapFee;
+
+        require(actualAmountOut >= minAmountOut, "Slippage was too high");
+        IERC20(tokenPath[tokenPath.length - 1]).transfer(recipient, actualAmountOut);
+    }
+
+    
 
 }
