@@ -1,3 +1,3 @@
-# OpenRouter Contracts
+# Minima Contracts
 
-Smart contracts for optimized order routing on the Celo network, powered by Djikstras and D\*
+Smart contracts for optimized order routing on the Celo network\*
