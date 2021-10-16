@@ -15,10 +15,17 @@ contract OpenRouter is Ownable {
     uint256 fee = 5 * (10 ** 7);
     uint256 FEE_DENOM = 10 ** 10;
 
-    function addAmm(address dexAddress, string name) external onlyOwner {
+    event FeeUpdated(address owner, uint256 oldFee, uint256 newFee);
+    event FeesClaimed(address owner);
+    event TokenAdded(address token);
+    event DexAdded(address dex, string name);
+    event Swap(address tokenFrom, address tokenTo, uint256 amountIn, uint256 amountOut);
+
+    function addDex(address dexAddress, string name) external onlyOwner {
         require(dexNames[dexAddress] == "", "DEX has alread been added");
         known[dexAddress] = name;
         dexs.push(dexAddress);
+        emit DexAdded(dexAddress, name);
     }
 
     function addToken(address newToken) external onlyOwner {
@@ -27,6 +34,20 @@ contract OpenRouter is Ownable {
         }
         supportedTokens.add(newToken);
         numTokens++;
+        emit TokenAdded(newToken);
+    }
+
+    function updateFee(uint256 _fee) external onlyOwner {
+        emit FeeUpdated(owner(), fee, _fee);
+        fee = _fee;
+    }
+
+    function getFees() external onlyOwner {
+        for (uint i = 0; i < numTokens; i++) {
+            IERC20 token = supportedTokens[i];
+            token.transfer(owner(), token.balanceOf(address(this)));
+        }
+        emit FeesClaimed(owner());
     }
 
     function getBestExchange(address tokenIn, address tokenOut, uint256 amountIn) public view returns (int256 rate, address exchange) {
@@ -133,8 +154,9 @@ contract OpenRouter is Ownable {
 
         require(actualAmountOut >= minAmountOut, "Slippage was too high");
         IERC20(tokenPath[tokenPath.length - 1]).transfer(recipient, actualAmountOut);
+        emit Swap(tokenPath[0], tokenPath[tokenPath.length - 1], amountIn, actualAmountOut);
     }
 
-    
+
 
 }
