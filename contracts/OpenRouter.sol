@@ -62,6 +62,37 @@ contract OpenRouter is Ownable {
         rate = OpenMath.exchangeRate(amountIn, amountOut)
     }
 
+    function getTokenIndex(address token) internal view returns (uint) {
+        for (uint i = 0; i < numTokens; i++) {
+            if (address(supportedTokens[i]) == token) {
+                return i;
+            }
+        }
+        revert("Token is not supported");
+    }
+
+    function getExpectedOutFromPath(address[] memory tokenPath, address[] memory exchangePath, uint256 amountIn) internal view returns (uint expectedOut) {
+        require (tokenPath.length > 1, "Path must contain atleast two tokens");
+        require(exchangePath.length == tokenPath.length - 1, "Exchange path incorrect length");
+
+        expectedOut = amountIn;
+        for (uint i = 0; i < exchangePath.length; i++) {
+            expectedOut = IWrapper(exchangePath[i]).getQuote(tokenPath[i], tokenPath[i + 1], expectedOut);
+        }
+    }
+
+    function getExpectedOut(address tokenIn, address tokenOut, uint256 amountIn) external view returns (
+        uint256 amountOut, address[] memory tokenPath, address[] memory exchangePath
+    ) {
+        uint256 tokenFromIndex = getTokenIndex(tokenIn);
+        uint256 tokenOutIndex = getTokenIndex(tokenOut);
+
+        (int256[][] memory exchangeRates, address[][] memory exchanges, int256[] memory pathTo, uint256[] parents, bool arbExists) = fillBoard(tokenFromIndex);
+
+        (tokenPath, exchangePath) = getPathFromBoard(tokenFromIndex, tokenOutIndex, exchangeRates, exchanges, pathTo, parents);
+        amountOut = getExpectedOutFromPath(tokenPath, exchangePath, amountIn);
+    }
+
     function fillBoard(uint256 tokenFromIndex) public view returns (int256[][] memory exchangeRates, address[][] memory exchanges, int256[] memory pathTo, uint256[] parents, bool arbExists) {
         exchangeRates = new int256[][](numTokens)(numTokens);
         exchanges = new address[][](numTokens)(numTokens);
@@ -157,6 +188,13 @@ contract OpenRouter is Ownable {
         emit Swap(tokenPath[0], tokenPath[tokenPath.length - 1], amountIn, actualAmountOut);
     }
 
+    function swapOnChain(address tokenIn, address tokenOut, uint256 amountOut, uint256 minAmountOut, address recipient) external returns (uint256) {
+        uint256 tokenFromIndex = getTokenIndex(tokenIn);
+        uint256 tokenOutIndex = getTokenIndex(tokenOut);
 
+        (int256[][] memory exchangeRates, address[][] memory exchanges, int256[] memory pathTo, uint256[] parents, bool arbExists) = fillBoard(tokenFromIndex);
 
+        (tokenPath, exchangePath) = getPathFromBoard(tokenFromIndex, tokenOutIndex, exchangeRates, exchanges, pathTo, parents);
+        return swap(tokenPath, exchangePath, amountIn, minAmountOut, recipient);
+    }
 }
