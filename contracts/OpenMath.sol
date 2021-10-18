@@ -2,10 +2,14 @@
 pragma solidity ^0.8.0;
 
 library OpenMath {
-  uint256 MAX_UINT = 2**256 - 1;
-  uint256 DECIMALS_UINT = 10 ** 18;
-  int256 DECIMALS_SIGNED = 10 ** 18;
-  int256 MAX_INT = 2**255 - 1;
+  uint256 constant MAX_UINT = 2**256 - 1;
+  uint256 constant DECIMALS_UINT = 10**18;
+  int256 constant DECIMALS_SIGNED = 10**18;
+  int256 constant MAX_INT = 2**255 - 1;
+  uint256 internal constant HALF_SCALE = 5e17;
+
+  /// @dev How many trailing decimals can be represented.
+  int256 internal constant SCALE = 1e18;
 
   /// @notice Finds the zero-based index of the first one in the binary representation of x.
   /// @dev See the note on msb in the "Find First Set" Wikipedia article https://en.wikipedia.org/wiki/Find_first_set
@@ -108,15 +112,22 @@ library OpenMath {
   }
 
   function safeUnsignedToSigned(uint256 unsigned) public pure returns (int256) {
-    require(unsigned & (1 << 256) == 0, "Unsigned integer is too large, conversion will result in a negative number");
+    require(
+      unsigned < uint256(2**256 - 1),
+      "Unsigned integer is too large, conversion will result in a negative number"
+    );
     return int256(unsigned);
   }
 
   // Returns exchange rate as a 59.18 decimal integer
-  function exchangeRate(uint256 amountIn, uint256 amountOut) public pure returns (int256 exchange) {
+  function exchangeRate(uint256 amountIn, uint256 amountOut)
+    public
+    pure
+    returns (int256 exchange)
+  {
     int256 numerator = safeUnsignedToSigned(amountIn);
     int256 denominator = safeUnsignedToSigned(amountOut);
 
-    exchange = (numerator * DECIMALS_SIGNED) / denominator
+    exchange = (numerator * DECIMALS_SIGNED) / denominator;
   }
 }

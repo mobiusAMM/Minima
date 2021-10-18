@@ -77,7 +77,6 @@ contract UbeswapWrapper is IWrapper, Ownable {
   function getQuotes(address tokenIn, uint256 amountIn)
     external
     view
-    override
     returns (uint256[] memory expectedOut, address[] memory tokensOut)
   {
     tokensOut = supportedTokens;
