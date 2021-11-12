@@ -19,8 +19,8 @@ task(
   async (taskArguments: { pools: string }, hre, runSuper) => {
     const { pools } = taskArguments;
     const addresses = pools.split(",").map((s) => s.trim());
-    const mobiusWrapper: MobiusWrapper = await hre.deployments.get(
-      "MobiusWrapper"
+    const mobiusWrapper = <MobiusWrapper>(
+      await hre.ethers.getContract("MobiusWrapper")
     );
     const txns = await Promise.all(
       addresses.map(
