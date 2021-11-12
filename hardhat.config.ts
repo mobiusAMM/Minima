@@ -1,43 +1,126 @@
-import * as dotenv from "dotenv";
-
-import { HardhatUserConfig, task } from "hardhat/config";
+import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
+import "@nomiclabs/hardhat-solhint";
 import "@nomiclabs/hardhat-waffle";
-import "@typechain/hardhat";
-import "hardhat-gas-reporter";
+import "hardhat-deploy";
+import { fornoURLs, ICeloNetwork } from "@ubeswap/hardhat-celo";
+import "dotenv/config";
+import "hardhat-abi-exporter";
+import { removeConsoleLog } from "hardhat-preprocessor";
+import "hardhat-spdx-license-identifier";
+import { HardhatUserConfig } from "hardhat/config";
+import { HDAccountsUserConfig } from "hardhat/types";
 import "solidity-coverage";
 
-dotenv.config();
+// task(
+//   "deploy-contracts",
+//   "Deploys contracts",
+//   async (...args: Parameters<ActionType<{ step: string }>>) => {
+//     return await (await import("./scripts/deploy")).deploy(...args);
+//   }
+// )
+//   .addParam("step", "The step to deploy")
+//   .addParam("pooledTokens", "Tokens in the pool")
+//   .addParam("decimals", "token decimals")
+//   .addParam("lpTokenName", "Name of the lp token for this swap")
+//   .addParam("lpTokenSymbol", "Symbol for the lp token")
+//   .addParam(
+//     "baseSwap",
+//     "Address of the base swap contract to be built on top of"
+//   );
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners();
+// task(
+//   "liveTest",
+//   "Tests the connectors on the specified network",
+//   async (...args: Parameters<ActionType<{ step: string }>>) => {
+//     return await (await import("./tasks/tests")).test(...args);
+//   }
+// ).addParam("step", "The step to deploy");
 
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
+// task("test", "Test the contracts", async () => {});
+const accounts: HDAccountsUserConfig = {
+  mnemonic:
+    process.env.MNEMONIC ||
+    "test test test test test test test test test test test junk",
+  path: "m/44'/52752'/0'/0/",
+};
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
+// const accounts = [`0x${process.env.PRIVATE_KEY_DEV}`];
 
-const config: HardhatUserConfig = {
-  solidity: "0.8.4",
-  networks: {
-    ropsten: {
-      url: process.env.ROPSTEN_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
+/**
+ * @type import('hardhat/config').HardhatUserConfig
+ */
+export default {
+  abiExporter: {
+    path: "./build/abi",
+    flat: true,
   },
-  gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
-    currency: "USD",
-  },
+  defaultNetwork: "hardhat",
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
-};
-
-export default config;
+  networks: {
+    mainnet: {
+      url: fornoURLs[ICeloNetwork.MAINNET],
+      accounts,
+      chainId: ICeloNetwork.MAINNET,
+      live: true,
+      gasPrice: 0.5 * 10 ** 9,
+      gas: 8000000,
+    },
+    alfajores: {
+      url: fornoURLs[ICeloNetwork.ALFAJORES],
+      accounts,
+      chainId: ICeloNetwork.ALFAJORES,
+      live: true,
+      gasPrice: 0.5 * 10 ** 9,
+      gas: 8000000,
+    },
+    hardhat: {
+      chainId: 31337,
+      accounts,
+    },
+  },
+  paths: {
+    deploy: "deploy",
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./build/cache",
+    artifacts: "./build/artifacts",
+    imports: "imports",
+    deployments: "deployments",
+  },
+  preprocess: {
+    eachLine: removeConsoleLog(
+      (bre) =>
+        bre.network.name !== "hardhat" && bre.network.name !== "localhost"
+    ),
+  },
+  solidity: {
+    version: "0.8.0",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 5000,
+      },
+    },
+  },
+  spdxLicenseIdentifier: {
+    overwrite: false,
+    runOnCompile: true,
+  },
+  tenderly: {
+    project: process.env.TENDERLY_PROJECT,
+    username: process.env.TENDERLY_USERNAME,
+  },
+  watcher: {
+    compile: {
+      tasks: ["compile"],
+      files: ["./contracts"],
+      verbose: true,
+    },
+  },
+  namedAccounts: {
+    deployer: 0,
+  },
+} as HardhatUserConfig;
