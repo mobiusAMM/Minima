@@ -8,26 +8,29 @@ import "dotenv/config";
 import "hardhat-abi-exporter";
 import { removeConsoleLog } from "hardhat-preprocessor";
 import "hardhat-spdx-license-identifier";
-import { HardhatUserConfig } from "hardhat/config";
+import { HardhatUserConfig, task } from "hardhat/config";
 import { HDAccountsUserConfig } from "hardhat/types";
 import "solidity-coverage";
+import { MobiusWrapper } from "./typechain";
 
-// task(
-//   "deploy-contracts",
-//   "Deploys contracts",
-//   async (...args: Parameters<ActionType<{ step: string }>>) => {
-//     return await (await import("./scripts/deploy")).deploy(...args);
-//   }
-// )
-//   .addParam("step", "The step to deploy")
-//   .addParam("pooledTokens", "Tokens in the pool")
-//   .addParam("decimals", "token decimals")
-//   .addParam("lpTokenName", "Name of the lp token for this swap")
-//   .addParam("lpTokenSymbol", "Symbol for the lp token")
-//   .addParam(
-//     "baseSwap",
-//     "Address of the base swap contract to be built on top of"
-//   );
+task(
+  "addMobiusSwaps",
+  "Adds Mobius Swap contracts to the wrapper",
+  async (taskArguments: { pools: string }, hre, runSuper) => {
+    const { pools } = taskArguments;
+    const addresses = pools.split(",").map((s) => s.trim());
+    const mobiusWrapper: MobiusWrapper = await hre.deployments.get(
+      "MobiusWrapper"
+    );
+    const txns = await Promise.all(
+      addresses.map(
+        async (swapAddress) =>
+          await mobiusWrapper.addSwapContract(swapAddress, 2)
+      )
+    );
+    console.log(txns);
+  }
+).addParam("pools", "The addresses of mobius pools, comma separated");
 
 // task(
 //   "liveTest",
