@@ -14,12 +14,20 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  const OpenMath = await ethers.getContractFactory("OpenMath");
+  const openMath = await OpenMath.deploy();
+  await openMath.deployed();
 
-  await greeter.deployed();
+  const Minima = await ethers.getContractFactory("Minima", {
+    libraries: {
+      OpenMath: openMath.address,
+    },
+  });
+  const minima = await Minima.deploy();
 
-  console.log("Greeter deployed to:", greeter.address);
+  await minima.deployed();
+
+  console.log("Minima deployed to:", minima.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
