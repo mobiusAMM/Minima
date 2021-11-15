@@ -12,20 +12,6 @@ const deployMinima: DeployFunction = async function ({
   const openMath = await deploy("OpenMath", {
     from: deployer,
   });
-  //   const OpenMath = await ethers.getContractFactory("OpenMath");
-  //   const openMath = await OpenMath.deploy();
-  //   await openMath.deployed();
-
-  //   const Minima = await ethers.getContractFactory("Minima", {
-  //     libraries: {
-  //       OpenMath: openMath.address,
-  //     },
-  //   });
-  //   const minima = await Minima.deploy();
-
-  //   await minima.deployed();
-
-  //   console.log("Minima deployed to:", minima.address);
   await deploy("Minima", {
     from: deployer,
     args: [],

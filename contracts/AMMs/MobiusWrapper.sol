@@ -28,9 +28,8 @@ interface ISwap {
 }
 
 contract MobiusWrapper is IWrapper, Ownable {
-  mapping(address => address[]) tokensToSwap; // token in -=> swap contracts
-  mapping(address => mapping(address => address)) tokenRoute; // token in => token out => swap address
-  mapping(address => bool) swapContained;
+  mapping(address => mapping(address => address)) public tokenRoute; // token in => token out => swap address
+  mapping(address => bool) public swapContained;
 
   function addSwapContract(address swapAddress, uint256 numTokens)
     external
@@ -40,6 +39,7 @@ contract MobiusWrapper is IWrapper, Ownable {
       !swapContained[swapAddress],
       "This swap contract has already been added!"
     );
+    swapContained[swapAddress] = true;
 
     ISwap swap = ISwap(swapAddress);
     address[] memory tokens = new address[](numTokens);
@@ -51,9 +51,11 @@ contract MobiusWrapper is IWrapper, Ownable {
     // be around 2 or 3
     for (uint256 i = 0; i < numTokens; i++) {
       address token_i = tokens[i];
-      for (uint256 j = i + 1; j < numTokens; j++) {
-        address token_j = tokens[j];
-        tokenRoute[token_i][token_j] = swapAddress;
+      for (uint256 j = 0; j < numTokens; j++) {
+        if (j != i) {
+          address token_j = tokens[j];
+          tokenRoute[token_i][token_j] = swapAddress;
+        }
       }
     }
   }

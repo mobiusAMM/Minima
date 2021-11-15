@@ -8,12 +8,15 @@ import {
 import { UbeswapWrapper, MobiusWrapper, IERC20 } from "../typechain";
 import ERC20_ABI from "../build/abi/IERC20.json";
 import { AccountClaimType } from "@celo/contractkit/lib/identity/claims/account";
+import { BigNumber } from "@ethersproject/bignumber";
 
 const tokens = {
   Celo: "0x471EcE3750Da237f93B8E339c536989b8978a438",
   cUSD: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
   USDC: "0x2A3684e9Dc20B857375EA04235F2F7edBe818FA7",
 };
+
+const CUSD_USDC_SWAP = "0xA5037661989789d0310aC2B796fa78F1B01F195D";
 
 const setup = async () => {
   const coins: { [name: string]: IERC20 } = {};
@@ -55,27 +58,51 @@ describe("UbeswapWrapper", function () {
       "10",
       "0"
     );
-    await result.wait();
   });
 });
 
 describe("MobiusWrapper", function () {
   it("Queries trade rate of cUSD -> USDC", async function () {
     const { MobiusWrapper } = await setup();
-    console.log("hello");
-    const resp = await MobiusWrapper.getQuote(tokens.USDC, tokens.cUSD, "100");
-    console.log(resp);
+    const resp = await MobiusWrapper.getQuote(tokens.USDC, tokens.cUSD, "1");
     const exchangeRate = resp.toNumber();
-    console.log(exchangeRate);
     expect(exchangeRate).greaterThan(0);
   });
-  // it("Performs a trade celo -> cUSD", async function () {
-  //   const { UbeswapWrapper, Celo } = await setup();
-  //   const approval = await Celo.approve(UbeswapWrapper.address, "10");
-  //   await approval.wait();
-  //   console.log(approval);
-  //   const result = await UbeswapWrapper.swap(CELO, CUSD, "10", "0");
-  //   await result.wait();
-  //   console.log(result);
-  // });
+  it("Returns the right indices for cUSD / USDC and Swap address", async function () {
+    const { MobiusWrapper } = await setup();
+    const pairInfo = await MobiusWrapper.getTradeIndices(
+      tokens.cUSD,
+      tokens.USDC
+    );
+    const { tokenIndexFrom, tokenIndexTo, swapAddress } = pairInfo;
+    expect(tokenIndexFrom).to.be.equal(BigNumber.from("0"));
+    expect(tokenIndexTo).to.be.equal(BigNumber.from("1"));
+    expect(swapAddress).to.be.equal(CUSD_USDC_SWAP);
+  });
+  it("Returns the right indices for USDC / cUSD and Swap address", async function () {
+    const { MobiusWrapper } = await setup();
+    const pairInfo = await MobiusWrapper.getTradeIndices(
+      tokens.USDC,
+      tokens.cUSD
+    );
+    const { tokenIndexFrom, tokenIndexTo, swapAddress } = pairInfo;
+    expect(tokenIndexFrom).to.be.equal(BigNumber.from("1"));
+    expect(tokenIndexTo).to.be.equal(BigNumber.from("0"));
+    expect(swapAddress).to.be.equal(CUSD_USDC_SWAP);
+  });
+
+  it("Performs a trade USDC -> cUSD", async function () {
+    const {
+      UbeswapWrapper,
+      coins: { USDC },
+    } = await setup();
+    await USDC.approve(UbeswapWrapper.address, "1");
+    const result = await UbeswapWrapper.swap(
+      tokens.USDC,
+      tokens.cUSD,
+      "1",
+      "0"
+    );
+    console.log(result);
+  });
 });
