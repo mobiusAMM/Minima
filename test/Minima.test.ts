@@ -32,9 +32,9 @@ const setup = async () => {
 };
 
 describe("Trade graph generation", function () {
-  it("Returns ubeswap wrapper as the best exchange for USDC -> cUSD", async function () {
+  it("Returns ubeswap wrapper as the best exchange for Celo -> mcUSD", async function () {
     const { Minima, UbeswapDeployment } = await setup();
-    const result = await Minima.getBestExchange(tokens.USDC, tokens.mcUSD, "1");
+    const result = await Minima.getBestExchange(tokens.Celo, tokens.mcUSD, "1");
     expect(result[1]).to.be.equal(UbeswapDeployment.address);
   });
   it("Returns mobius wrapper as the best exchange for USDC -> cUSD", async function () {
@@ -42,10 +42,10 @@ describe("Trade graph generation", function () {
     const result = await Minima.getBestExchange(tokens.USDC, tokens.cUSD, "1");
     expect(result[1]).to.be.equal(MobiusDeployment.address);
   });
-  it("Returns ubeswap wrapper as the best exchange for CELO -> cUSD", async function () {
+  it("Returns 0x0000 as the best exchange for CELO -> cUSD", async function () {
     const { Minima, UbeswapDeployment } = await setup();
     const result = await Minima.getBestExchange(tokens.Celo, tokens.cUSD, "1");
-    expect(result[1]).to.be.equal(UbeswapDeployment.address);
+    expect(result[1]).to.be.equal("0x0000000000000000000000000000000000000000");
   });
 
   it("Fills the trade graph for Celo", async () => {
@@ -84,11 +84,25 @@ describe("Trade graph generation", function () {
 
     console.log("Expected out", result.toString());
   });
-  it("Gets the best route for Celo -> cUSD", async () => {
+  it("Gets the best route for mcUSD -> Celo", async () => {
     const { Minima, MobiusDeployment, UbeswapDeployment } = await setup();
-    const result = await Minima.getExpectedOut(tokens.USDC, tokens.Celo, "100");
+    const result = await Minima.getExpectedOut(
+      tokens.mcUSD,
+      tokens.Celo,
+      "100"
+    );
     console.log(result);
   });
+  it("Gets the best route for mcUSD -> Mobi", async () => {
+    const { Minima, MobiusDeployment, UbeswapDeployment } = await setup();
+    const result = await Minima.getExpectedOut(
+      tokens.mcUSD,
+      tokens.mobi,
+      "100"
+    );
+    console.log(result);
+  });
+
   it("Correclty trades given a trade route", async () => {
     const {
       Minima,
@@ -130,7 +144,7 @@ describe("Trade graph generation", function () {
     console.log("Patched", result);
   });
 
-  it("Trades Celo -> cUSD", async () => {
+  it("Trades Celo -> mobi", async () => {
     const {
       Minima,
       coins: { Celo },
@@ -139,13 +153,30 @@ describe("Trade graph generation", function () {
     await approval.wait();
     const result = await Minima.swapOnChain(
       tokens.Celo,
-      tokens.cUSD,
+      tokens.mobi,
       "100",
       "0",
       "0x4ea77424Da100ac856ece3DDfAbd8B528570Ca0d"
     );
     console.log(result);
   });
+  it("Trades mcUSD -> mobi", async () => {
+    const {
+      Minima,
+      coins: { Celo },
+    } = await setup();
+    const approval = await Celo.approve(Minima.address, "100");
+    await approval.wait();
+    const result = await Minima.swapOnChain(
+      tokens.mcUSD,
+      tokens.mobi,
+      "100",
+      "0",
+      "0x4ea77424Da100ac856ece3DDfAbd8B528570Ca0d"
+    );
+    console.log(result);
+  });
+
   it("Traces the board to find the correct path", async () => {
     const { Minima, MobiusDeployment, UbeswapDeployment } = await setup();
     const result = await Minima.getPathFromBoard(
