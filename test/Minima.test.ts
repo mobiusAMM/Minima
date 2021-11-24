@@ -4,10 +4,13 @@ import { IERC20, Minima } from "../typechain";
 import ERC20_ABI from "../build/abi/IERC20.json";
 import { BigNumber } from "@ethersproject/bignumber";
 
-const tokens = {
+const tokens: { [name: string]: string } = {
   Celo: "0x471EcE3750Da237f93B8E339c536989b8978a438",
   cUSD: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
   USDC: "0x2A3684e9Dc20B857375EA04235F2F7edBe818FA7",
+  cEUR: "0xD8763CBa276a3738E6DE85b4b3bF5FDed6D6cA73",
+  mcUSD: "0x918146359264C492BD6934071c6Bd31C854EDBc3",
+  mobi: "0x73a210637f6F6B7005512677Ba6B3C96bb4AA44B",
 };
 
 const setup = async () => {
@@ -23,13 +26,150 @@ const setup = async () => {
     Minima: <Minima>await ethers.getContract("Minima"),
     coins,
     signer: (await ethers.getSigners())[0],
+    UbeswapDeployment: await deployments.get("UbeswapWrapper"),
+    MobiusDeployment: await deployments.get("MobiusWrapper"),
   };
 };
 
 describe("Trade graph generation", function () {
-  it("Returns ubeswap wrapper as the best exchange for USDC -> Celo", async function () {
-    const { Minima } = await setup();
-    const result = await Minima.getBestExchange(tokens.USDC, tokens.Celo, "1");
+  it("Returns ubeswap wrapper as the best exchange for USDC -> cUSD", async function () {
+    const { Minima, UbeswapDeployment } = await setup();
+    const result = await Minima.getBestExchange(tokens.USDC, tokens.mcUSD, "1");
+    expect(result[1]).to.be.equal(UbeswapDeployment.address);
+  });
+  it("Returns mobius wrapper as the best exchange for USDC -> cUSD", async function () {
+    const { Minima, MobiusDeployment } = await setup();
+    const result = await Minima.getBestExchange(tokens.USDC, tokens.cUSD, "1");
+    expect(result[1]).to.be.equal(MobiusDeployment.address);
+  });
+  it("Returns ubeswap wrapper as the best exchange for CELO -> cUSD", async function () {
+    const { Minima, UbeswapDeployment } = await setup();
+    const result = await Minima.getBestExchange(tokens.Celo, tokens.cUSD, "1");
+    expect(result[1]).to.be.equal(UbeswapDeployment.address);
+  });
+
+  it("Fills the trade graph for Celo", async () => {
+    const { Minima, MobiusDeployment, UbeswapDeployment } = await setup();
+    const result = await Minima.fillBoard("0");
+    console.log(result);
+  });
+  for (let i = 0; i < Object.values(tokens).length; i++) {
+    for (let j = 0; j < Object.values(tokens).length; j++) {
+      const tokenIn = Object.keys(tokens)[i];
+      const tokenOut = Object.keys(tokens)[j];
+      it(`Queries exchange rate for ${tokenIn} -> ${tokenOut}`, async () => {
+        const { Minima } = await setup();
+        await Minima.getBestExchange(
+          tokens[tokenIn],
+          tokens[tokenOut],
+          "1000000000"
+        );
+      });
+    }
+  }
+  it("Potentially works", async () => {
+    const { Minima, MobiusDeployment, UbeswapDeployment } = await setup();
+    const result = await Minima.getExpectedOutFromPath(
+      [
+        "0x471EcE3750Da237f93B8E339c536989b8978a438",
+        "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+        "0x0000000000000000000000000000000000000000",
+      ],
+      [
+        "0x074a4aB9F49EE9718d26E54d78f6C81b1EdE3654",
+        "0x0000000000000000000000000000000000000000",
+      ],
+      "1000000000000000"
+    );
+
+    console.log("Expected out", result.toString());
+  });
+  it("Gets the best route for Celo -> cUSD", async () => {
+    const { Minima, MobiusDeployment, UbeswapDeployment } = await setup();
+    const result = await Minima.getExpectedOut(tokens.USDC, tokens.Celo, "100");
+    console.log(result);
+  });
+  it("Correclty trades given a trade route", async () => {
+    const {
+      Minima,
+      coins: { Celo },
+    } = await setup();
+    const approval = await Celo.approve(Minima.address, "100");
+    const result = await Minima.swap(
+      [
+        "0x471EcE3750Da237f93B8E339c536989b8978a438",
+        "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+        "0x0000000000000000000000000000000000000000",
+      ],
+      [
+        "0x074a4aB9F49EE9718d26E54d78f6C81b1EdE3654",
+        "0x0000000000000000000000000000000000000000",
+      ],
+      "100",
+      "0",
+      "0x4ea77424Da100ac856ece3DDfAbd8B528570Ca0d"
+    );
+    console.log("Raw", result);
+  });
+  it("Correclty trades given a trade route", async () => {
+    const {
+      Minima,
+      coins: { Celo },
+    } = await setup();
+    const approval = await Celo.approve(Minima.address, "100");
+    const result = await Minima.swap(
+      [
+        "0x471EcE3750Da237f93B8E339c536989b8978a438",
+        "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+      ],
+      ["0x074a4aB9F49EE9718d26E54d78f6C81b1EdE3654"],
+      "100",
+      "0",
+      "0x4ea77424Da100ac856ece3DDfAbd8B528570Ca0d"
+    );
+    console.log("Patched", result);
+  });
+
+  it("Trades Celo -> cUSD", async () => {
+    const {
+      Minima,
+      coins: { Celo },
+    } = await setup();
+    const approval = await Celo.approve(Minima.address, "100");
+    await approval.wait();
+    const result = await Minima.swapOnChain(
+      tokens.Celo,
+      tokens.cUSD,
+      "100",
+      "0",
+      "0x4ea77424Da100ac856ece3DDfAbd8B528570Ca0d"
+    );
+    console.log(result);
+  });
+  it("Traces the board to find the correct path", async () => {
+    const { Minima, MobiusDeployment, UbeswapDeployment } = await setup();
+    const result = await Minima.getPathFromBoard(
+      "0",
+      "1",
+      [
+        [
+          "0x0000000000000000000000000000000000000000",
+          "0x074a4aB9F49EE9718d26E54d78f6C81b1EdE3654",
+          "0x074a4aB9F49EE9718d26E54d78f6C81b1EdE3654",
+        ],
+        [
+          "0x074a4aB9F49EE9718d26E54d78f6C81b1EdE3654",
+          "0x0000000000000000000000000000000000000000",
+          "0xF6c73f64C526D7F9668b39DB203D23F062E8f006",
+        ],
+        [
+          "0x074a4aB9F49EE9718d26E54d78f6C81b1EdE3654",
+          "0xF6c73f64C526D7F9668b39DB203D23F062E8f006",
+          "0x0000000000000000000000000000000000000000",
+        ],
+      ],
+      ["0", "0", "0"]
+    );
     console.log(result);
   });
 });

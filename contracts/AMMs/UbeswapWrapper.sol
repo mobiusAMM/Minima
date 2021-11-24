@@ -51,13 +51,16 @@ interface IPair {
 contract UbeswapWrapper is IWrapper, Ownable {
   IUbeswapRouter public constant ubeswap =
     IUbeswapRouter(address(0xE3D8bd6Aed4F159bc8000a9cD47CffDb95F96121));
-  address[] public supportedTokens;
+  mapping(address => mapping(address => bool)) supportedPair;
 
   function _getQuote(
     address tokenIn,
     address tokenOut,
     uint256 amountIn
   ) internal view returns (uint256) {
+    if (!supportedPair[tokenIn][tokenOut]) {
+      return 0;
+    }
     IPair pair = IPair(ubeswap.pairFor(tokenIn, tokenOut));
     (uint256 reserveIn, uint256 reserveOut, ) = pair.getReserves();
     if (tokenIn != pair.token0()) {
@@ -76,29 +79,32 @@ contract UbeswapWrapper is IWrapper, Ownable {
     return _getQuote(tokenIn, tokenOut, amountIn);
   }
 
-  function getQuotes(address tokenIn, uint256 amountIn)
-    external
-    view
-    returns (uint256[] memory expectedOut, address[] memory tokensOut)
-  {
-    tokensOut = supportedTokens;
-    expectedOut = new uint256[](supportedTokens.length);
+  // function getQuotes(address tokenIn, uint256 amountIn)
+  //   external
+  //   view
+  //   returns (uint256[] memory expectedOut, address[] memory tokensOut)
+  // {
+  //   tokensOut = supportedTokens;
+  //   expectedOut = new uint256[](supportedTokens.length);
 
-    for (uint256 i = 0; i < supportedTokens.length; i++) {
-      address tokenOut = supportedTokens[i];
-      if (tokenOut == tokenIn) {
-        expectedOut[i] = 0;
-      } else {
-        expectedOut[i] = _getQuote(tokenIn, tokenOut, amountIn);
-      }
-    }
+  //   for (uint256 i = 0; i < supportedTokens.length; i++) {
+  //     address tokenOut = supportedTokens[i];
+  //     if (tokenOut == tokenIn) {
+  //       expectedOut[i] = 0;
+  //     } else {
+  //       expectedOut[i] = _getQuote(tokenIn, tokenOut, amountIn);
+  //     }
+  //   }
+  // }
+
+  function addTokenPair(address token1, address token2) external onlyOwner {
+    supportedPair[token1][token2] = true;
+    supportedPair[token2][token1] = true;
   }
 
-  function addSupportedTokens(address[] calldata tokens) external onlyOwner {
-    address[] storage currentlySupportedTokens = supportedTokens;
-    for (uint256 i = 0; i < tokens.length; i++) {
-      currentlySupportedTokens.push(tokens[i]);
-    }
+  function removeTokenPair(address token1, address token2) external onlyOwner {
+    supportedPair[token1][token2] = false;
+    supportedPair[token2][token1] = false;
   }
 
   function swap(

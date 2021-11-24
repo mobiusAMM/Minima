@@ -1,5 +1,21 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "initialTokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "initialDexes",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -161,19 +177,9 @@
     "name": "fillBoard",
     "outputs": [
       {
-        "internalType": "int256[][]",
-        "name": "exchangeRates",
-        "type": "int256[][]"
-      },
-      {
         "internalType": "address[][]",
         "name": "exchanges",
         "type": "address[][]"
-      },
-      {
-        "internalType": "int256[]",
-        "name": "pathTo",
-        "type": "int256[]"
       },
       {
         "internalType": "uint256[]",
@@ -210,9 +216,9 @@
     "name": "getBestExchange",
     "outputs": [
       {
-        "internalType": "int256",
+        "internalType": "uint256",
         "name": "rate",
-        "type": "int256"
+        "type": "uint256"
       },
       {
         "internalType": "address",
@@ -263,6 +269,35 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "tokenPath",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "exchangePath",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      }
+    ],
+    "name": "getExpectedOutFromPath",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "expectedOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getFees",
     "outputs": [],
@@ -282,19 +317,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "int256[][]",
-        "name": "exchangeRates",
-        "type": "int256[][]"
-      },
-      {
         "internalType": "address[][]",
         "name": "exchanges",
         "type": "address[][]"
-      },
-      {
-        "internalType": "int256[]",
-        "name": "pathTo",
-        "type": "int256[]"
       },
       {
         "internalType": "uint256[]",
