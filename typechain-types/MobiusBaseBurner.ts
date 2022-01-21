@@ -19,6 +19,8 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface MobiusBaseBurnerInterface extends utils.Interface {
   contractName: "MobiusBaseBurner";
   functions: {
+    "MinimaRouter()": FunctionFragment;
+    "MobiusWrapper()": FunctionFragment;
     "burn(address)": FunctionFragment;
     "emergencyOwner()": FunctionFragment;
     "is_killed()": FunctionFragment;
@@ -36,6 +38,14 @@ export interface MobiusBaseBurnerInterface extends utils.Interface {
     "transferOwnership(address)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "MinimaRouter",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MobiusWrapper",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "burn", values: [string]): string;
   encodeFunctionData(
     functionFragment: "emergencyOwner",
@@ -73,6 +83,14 @@ export interface MobiusBaseBurnerInterface extends utils.Interface {
     values: [string]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "MinimaRouter",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "MobiusWrapper",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "emergencyOwner",
@@ -159,6 +177,10 @@ export interface MobiusBaseBurner extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    MinimaRouter(overrides?: CallOverrides): Promise<[string]>;
+
+    MobiusWrapper(overrides?: CallOverrides): Promise<[string]>;
+
     burn(
       coin: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -218,6 +240,10 @@ export interface MobiusBaseBurner extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
+
+  MinimaRouter(overrides?: CallOverrides): Promise<string>;
+
+  MobiusWrapper(overrides?: CallOverrides): Promise<string>;
 
   burn(
     coin: string,
@@ -279,6 +305,10 @@ export interface MobiusBaseBurner extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    MinimaRouter(overrides?: CallOverrides): Promise<string>;
+
+    MobiusWrapper(overrides?: CallOverrides): Promise<string>;
+
     burn(coin: string, overrides?: CallOverrides): Promise<boolean>;
 
     emergencyOwner(overrides?: CallOverrides): Promise<string>;
@@ -328,6 +358,10 @@ export interface MobiusBaseBurner extends BaseContract {
   };
 
   estimateGas: {
+    MinimaRouter(overrides?: CallOverrides): Promise<BigNumber>;
+
+    MobiusWrapper(overrides?: CallOverrides): Promise<BigNumber>;
+
     burn(
       coin: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -389,6 +423,10 @@ export interface MobiusBaseBurner extends BaseContract {
   };
 
   populateTransaction: {
+    MinimaRouter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    MobiusWrapper(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     burn(
       coin: string,
       overrides?: Overrides & { from?: string | Promise<string> }

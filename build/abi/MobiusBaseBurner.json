@@ -55,6 +55,32 @@
     "type": "event"
   },
   {
+    "inputs": [],
+    "name": "MinimaRouter",
+    "outputs": [
+      {
+        "internalType": "contract Minima",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MobiusWrapper",
+    "outputs": [
+      {
+        "internalType": "contract IWrapper",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract IERC20",

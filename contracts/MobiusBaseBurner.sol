@@ -15,8 +15,8 @@ contract MobiusBaseBurner is Ownable {
   IERC20 constant MOBI = IERC20(0x73a210637f6F6B7005512677Ba6B3C96bb4AA44B);
   uint256 constant MAX_UINT = 2**256 - 1;
 
-  IWrapper MobiusWrapper;
-  Minima MinimaRouter;
+  IWrapper public MobiusWrapper;
+  Minima public MinimaRouter;
   mapping(address => mapping(address => bool)) isApproved;
 
   address public emergencyOwner;
@@ -59,14 +59,14 @@ contract MobiusBaseBurner is Ownable {
   function burn(IERC20 coin) external isLive returns (bool) {
     uint256 amount = coin.balanceOf(msg.sender);
     uint256 amountBase;
-    if (amount > 0) {
-      coin.safeTransferFrom(msg.sender, address(this), amount);
-    }
+    if (amount == 0) return false;
+
+    coin.safeTransferFrom(msg.sender, address(this), amount);
 
     // If the token is not baseToken, then first swap into baseToken through the Mobius pools
     if (address(coin) != address(baseToken)) {
       if (!isApproved[address(coin)][address(MobiusWrapper)]) {
-        coin.approve(address(MobiusWrapper), MAX_UINT);
+        coin.safeApprove(address(MobiusWrapper), MAX_UINT);
         isApproved[address(coin)][address(MobiusWrapper)] = true;
       }
       MobiusWrapper.swap(address(coin), address(baseToken), amount, 0);

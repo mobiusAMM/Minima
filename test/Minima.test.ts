@@ -188,24 +188,22 @@ describe("Trade graph generation", function () {
   //   );
   //   console.log(result);
   // });
-
-  it("Trades cEUR -> mobi", async () => {
-    const {
-      Minima,
-      coins: { cEUR },
-    } = await setup();
-    const approval = await cEUR.approve(Minima.address, "100");
-    await approval.wait();
-    const result = await Minima.swapOnChain(
-      tokens.cEUR,
-      tokens.mobi,
-      "100",
-      "0",
-      "0x4ea77424Da100ac856ece3DDfAbd8B528570Ca0d"
-    );
-    console.log(result);
-  });
-
+  // it("Trades cEUR -> mobi", async () => {
+  //   const {
+  //     Minima,
+  //     coins: { cEUR },
+  //   } = await setup();
+  //   const approval = await cEUR.approve(Minima.address, "100");
+  //   await approval.wait();
+  //   const result = await Minima.swapOnChain(
+  //     tokens.cEUR,
+  //     tokens.mobi,
+  //     "100",
+  //     "0",
+  //     "0x4ea77424Da100ac856ece3DDfAbd8B528570Ca0d"
+  //   );
+  //   console.log(result);
+  // });
   // it("Traces the board to find the correct path", async () => {
   //   const { Minima, MobiusDeployment, UbeswapDeployment } = await setup();
   //   const result = await Minima.getPathFromBoard(
