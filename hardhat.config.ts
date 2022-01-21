@@ -18,6 +18,7 @@ import {
   MoolaWrapper,
   UbeswapWrapper,
 } from "./typechain-types";
+import { SWAP_ADDRESSES } from "./mobiusSwapAddresses";
 
 const parseTokens = (str: string) => str.split(",").map((s) => s.trim());
 const tokens: { [name: string]: string } = {
@@ -31,7 +32,7 @@ const tokens: { [name: string]: string } = {
 };
 
 task(
-  "init",
+  "init-wrappers",
   "Initiates minima with set tokens",
   async (args, hre, runSuper) => {
     const ubeswap = <UbeswapWrapper>(
@@ -40,16 +41,21 @@ task(
     const moolaWrapper = <MoolaWrapper>(
       await hre.ethers.getContract("MoolaWrapper")
     );
-    const minima = <Minima>await hre.ethers.getContract("Minima");
+    const mobiusWrapper = <MobiusWrapper>(
+      await hre.ethers.getContract("MobiusWrapper")
+    );
+    await ubeswap.addTokenPair(tokens.Celo, tokens.mcUSD);
+    await ubeswap.addTokenPair(tokens.Celo, tokens.mobi);
+    await moolaWrapper.addAsset(tokens.cUSD, tokens.mcUSD);
 
-    // await ubeswap.addTokenPair(tokens.Celo, tokens.mcUSD);
-    // await ubeswap.addTokenPair(tokens.Celo, tokens.mobi);
-    // await ubeswap.addTokenPair(tokens.mcUSD, tokens.mcEUR);
-    await ubeswap.addTokenPair(tokens.cUSD, tokens.cEUR);
-    // await moolaWrapper.addAsset(tokens.cUSD, tokens.mcUSD);
-    // await minima.addToken(tokens.mcEUR);
+    for (let i = 0; i < SWAP_ADDRESSES.length; i++) {
+      const txn = await mobiusWrapper.addSwapContract(SWAP_ADDRESSES[i], 2);
+      console.log(txn.hash);
+    }
   }
 );
+
+task("init");
 
 task(
   "addMobiusSwaps",

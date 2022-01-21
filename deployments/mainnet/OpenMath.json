@@ -1,5 +1,5 @@
 {
-  "address": "0x311871C137548555f0BB6F7b2964f5314E4B6B3B",
+  "address": "0x5F6d4D3ee530cDD44bEbc4c067ec8c4ebAa99649",
   "abi": [
     {
       "inputs": [
@@ -26,24 +26,24 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0xba8bb75ac3aee3a7030ee874e8b36b7476a5239a71be47cf9747411555da586e",
+  "transactionHash": "0x7e186159db24bef402b021224eaa3bb27d487a1074ebc51ee8b47d9789a878be",
   "receipt": {
     "to": null,
-    "from": "0x4ea77424Da100ac856ece3DDfAbd8B528570Ca0d",
-    "contractAddress": "0x311871C137548555f0BB6F7b2964f5314E4B6B3B",
-    "transactionIndex": 3,
+    "from": "0xCD943EE26221AC3e6e7f3e38598F2b08BAEA87DD",
+    "contractAddress": "0x5F6d4D3ee530cDD44bEbc4c067ec8c4ebAa99649",
+    "transactionIndex": 6,
     "gasUsed": "136594",
     "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    "blockHash": "0xc7b7b484031930caed645459c2364b53268e513b40e5607ee7961813a70cf30b",
-    "transactionHash": "0xba8bb75ac3aee3a7030ee874e8b36b7476a5239a71be47cf9747411555da586e",
+    "blockHash": "0xf0a6c2dca85f8b10c6889766506e555274f590c4cd373e7afe3d0547e9cb05d4",
+    "transactionHash": "0x7e186159db24bef402b021224eaa3bb27d487a1074ebc51ee8b47d9789a878be",
     "logs": [],
-    "blockNumber": 11032897,
-    "cumulativeGasUsed": "788912",
+    "blockNumber": 11044778,
+    "cumulativeGasUsed": "1442414",
     "status": 1,
     "byzantium": true
   },
   "args": [],
-  "solcInputHash": "20f2989410bc9d2a28920a8dd2b272d2",
+  "solcInputHash": "363879559355511f2c2861c9db5add6b",
   "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amountOut\",\"type\":\"uint256\"}],\"name\":\"exchangeRate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"exchange\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"stateVariables\":{\"SCALE\":{\"details\":\"How many trailing decimals can be represented.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/OpenMath.sol\":\"OpenMath\"},\"evmVersion\":\"istanbul\",\"libraries\":{\":__CACHE_BREAKER__\":\"0x00000000d41867734bbee4c6863d9255b2b06ac1\"},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":5000},\"remappings\":[]},\"sources\":{\"contracts/OpenMath.sol\":{\"content\":\"// SPDX-License-Identifier: ISC\\n\\n//SPDX-License-Identifier: Unlicense\\npragma solidity ^0.8.0;\\n\\nlibrary OpenMath {\\n  uint256 constant MAX_UINT = 2**256 - 1;\\n  uint256 constant DECIMALS_UINT = 10**18;\\n  int256 constant DECIMALS_SIGNED = 10**18;\\n  int256 constant MAX_INT = 2**255 - 1;\\n  uint256 internal constant HALF_SCALE = 5e17;\\n\\n  /// @dev How many trailing decimals can be represented.\\n  int256 internal constant SCALE = 1e18;\\n\\n  // 2^127.\\n  uint128 private constant TWO127 = 0x80000000000000000000000000000000;\\n\\n  // 2^128 - 1\\n  uint128 private constant TWO128_1 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;\\n\\n  // ln(2) * 2^128\\n  uint128 private constant LN2 = 0xb17217f7d1cf79abc9e3b39803f2f6af;\\n\\n  /**\\n   * Return index of most significant non-zero bit in given non-zero 256-bit\\n   * unsigned integer value.\\n   *\\n   * @param _x value to get index of most significant non-zero bit in\\n   * @return r index of most significant non-zero bit in given number\\n   */\\n  function mostSignificantBit(uint256 _x) internal pure returns (uint8 r) {\\n    require(_x > 0);\\n\\n    uint256 x = _x;\\n    r = 0;\\n    if (x >= 0x100000000000000000000000000000000) {\\n      x >>= 128;\\n      r += 128;\\n    }\\n    if (x >= 0x10000000000000000) {\\n      x >>= 64;\\n      r += 64;\\n    }\\n    if (x >= 0x100000000) {\\n      x >>= 32;\\n      r += 32;\\n    }\\n    if (x >= 0x10000) {\\n      x >>= 16;\\n      r += 16;\\n    }\\n    if (x >= 0x100) {\\n      x >>= 8;\\n      r += 8;\\n    }\\n    if (x >= 0x10) {\\n      x >>= 4;\\n      r += 4;\\n    }\\n    if (x >= 0x4) {\\n      x >>= 2;\\n      r += 2;\\n    }\\n    if (x >= 0x2) r += 1; // No need to shift x anymore\\n  }\\n\\n  /*\\nfunction mostSignificantBit (uint256 x) pure internal returns (uint8) {\\n  require (x > 0);\\n\\n  uint8 l = 0;\\n  uint8 h = 255;\\n\\n  while (h > l) {\\n    uint8 m = uint8 ((uint16 (l) + uint16 (h)) >> 1);\\n    uint256 t = x >> m;\\n    if (t == 0) h = m - 1;\\n    else if (t > 1) l = m + 1;\\n    else return m;\\n  }\\n\\n  return h;\\n}\\n*/\\n\\n  /**\\n   * Calculate log_2 (x / 2^128) * 2^128.\\n   *\\n   * @param _x parameter value\\n   * @return log_2 (x / 2^128) * 2^128\\n   */\\n  function log_2(uint256 _x) internal pure returns (int256) {\\n    require(_x > 0, \\\"Must be a positive number\\\");\\n    uint256 x = _x;\\n    uint8 msb = mostSignificantBit(x);\\n    if (msb > 128) x >>= msb - 128;\\n    else if (msb < 128) x <<= 128 - msb;\\n\\n    x &= TWO128_1;\\n\\n    int256 result = (int256(msb) - 128) << 128; // Integer part of log_2\\n\\n    int256 bit = TWO127;\\n    for (uint8 i = 0; i < 128 && x > 0; i++) {\\n      x = (x << 1) + ((x * x + TWO127) >> 128);\\n      if (x > TWO128_1) {\\n        result |= bit;\\n        x = (x >> 1) - TWO127;\\n      }\\n      bit >>= 1;\\n    }\\n\\n    return result;\\n  }\\n\\n  // Returns exchange rate as a 59.18 decimal integer\\n  function exchangeRate(uint256 amountIn, uint256 amountOut)\\n    public\\n    pure\\n    returns (uint256 exchange)\\n  {\\n    exchange = (amountOut * DECIMALS_UINT) / amountIn;\\n  }\\n}\\n\",\"keccak256\":\"0x2418b2fe22a4e35863813975d73f232a30acb962f47615df58e3405f49979ae9\",\"license\":\"ISC\"}},\"version\":1}",
   "bytecode": "0x61018461003a600b82828239805160001a60731461002d57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600436106100355760003560e01c8063ed7248041461003a575b600080fd5b61004d610048366004610089565b610063565b60405161005a91906100aa565b60405180910390f35b600082610078670de0b6b3a7640000846100ec565b61008291906100b3565b9392505050565b6000806040838503121561009b578182fd5b50508035926020909101359150565b90815260200190565b6000826100e7577f4e487b710000000000000000000000000000000000000000000000000000000081526012600452602481fd5b500490565b6000817fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0483118215151615610149577f4e487b710000000000000000000000000000000000000000000000000000000081526011600452602481fd5b50029056fea2646970667358221220a3c1349275fdc0859b2a673667c66f3b07eaca163f7a6b6cd0122d6fd2aac5a264736f6c63430008000033",
   "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600436106100355760003560e01c8063ed7248041461003a575b600080fd5b61004d610048366004610089565b610063565b60405161005a91906100aa565b60405180910390f35b600082610078670de0b6b3a7640000846100ec565b61008291906100b3565b9392505050565b6000806040838503121561009b578182fd5b50508035926020909101359150565b90815260200190565b6000826100e7577f4e487b710000000000000000000000000000000000000000000000000000000081526012600452602481fd5b500490565b6000817fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0483118215151615610149577f4e487b710000000000000000000000000000000000000000000000000000000081526011600452602481fd5b50029056fea2646970667358221220a3c1349275fdc0859b2a673667c66f3b07eaca163f7a6b6cd0122d6fd2aac5a264736f6c63430008000033",

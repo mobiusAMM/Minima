@@ -60,10 +60,10 @@ contract MobiusWrapper is IWrapper, Ownable {
     return true;
   }
 
-  function addMultipleSwapContracts(address[] contracts, uint256[] numTokens)
-    external
-    onlyOwner
-  {
+  function addMultipleSwapContracts(
+    address[] calldata contracts,
+    uint256[] calldata numTokens
+  ) external onlyOwner {
     require(contracts.length == numTokens.length, "Array lengths vary");
     for (uint256 i = 0; i < contracts.length; i++) {
       addSwapContract(contracts[i], numTokens[i]);
