@@ -37,7 +37,7 @@ contract MobiusWrapper is IWrapper, Ownable {
   {
     require(
       !swapContained[swapAddress],
-      "This swap contract has already been added!"
+      "Swap contract has already been added!"
     );
     swapContained[swapAddress] = true;
 
