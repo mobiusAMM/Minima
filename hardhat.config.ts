@@ -1,3 +1,4 @@
+import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-solhint";
@@ -11,7 +12,7 @@ import "hardhat-spdx-license-identifier";
 import { HardhatUserConfig, task } from "hardhat/config";
 import { HDAccountsUserConfig } from "hardhat/types";
 import "solidity-coverage";
-import { Minima, MobiusWrapper } from "./typechain";
+import { Minima, MobiusWrapper } from "./typechain-types";
 
 task(
   "addMobiusSwaps",
@@ -68,14 +69,6 @@ task(
     console.log(txns);
   }
 ).addParam("tokens", "The addresses of tokens, comma separated");
-
-// task(
-//   "liveTest",
-//   "Tests the connectors on the specified network",
-//   async (...args: Parameters<ActionType<{ step: string }>>) => {
-//     return await (await import("./tasks/tests")).test(...args);
-//   }
-// ).addParam("step", "The step to deploy");
 
 // task("test", "Test the contracts", async () => {});
 const accounts: HDAccountsUserConfig = {

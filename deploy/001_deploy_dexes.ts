@@ -19,6 +19,11 @@ const deployMinima: DeployFunction = async function ({
     args: [],
     log: true,
   });
+  const moolaWrapper = await deploy("MoolaWrapper", {
+    from: deployer,
+    args: [],
+    log: true,
+  });
 };
 
 export default deployMinima;
