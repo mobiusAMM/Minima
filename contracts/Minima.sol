@@ -29,6 +29,17 @@ contract Minima is Ownable {
     uint256 amountOut
   );
 
+  constructor(address[] memory initialTokens, address[] memory initialDexes) {
+    for (uint256 i = 0; i < initialTokens.length; i++) {
+      supportedTokens.push(initialTokens[i]);
+      numTokens++;
+    }
+    for (uint256 i = 0; i < initialDexes.length; i++) {
+      dexKnown[initialDexes[i]] = true;
+      dexs.push(initialDexes[i]);
+    }
+  }
+
   function addDex(address dexAddress, string calldata name) external onlyOwner {
     require(!dexKnown[dexAddress], "DEX has alread been added");
     dexKnown[dexAddress] = true;
@@ -62,7 +73,7 @@ contract Minima is Ownable {
     address tokenIn,
     address tokenOut,
     uint256 amountIn
-  ) public view returns (int256 rate, address exchange) {
+  ) public view returns (uint256 rate, address exchange) {
     uint256 amountOut = 0;
     for (uint256 i = 0; i < dexs.length; i++) {
       uint256 quote = IWrapper(dexs[i]).getQuote(tokenIn, tokenOut, amountIn);
@@ -80,14 +91,14 @@ contract Minima is Ownable {
         return i;
       }
     }
-    revert("Token is not supported");
+    revert("Token not supported");
   }
 
   function getExpectedOutFromPath(
     address[] memory tokenPath,
     address[] memory exchangePath,
     uint256 amountIn
-  ) internal view returns (uint256 expectedOut) {
+  ) public view returns (uint256 expectedOut) {
     require(tokenPath.length > 1, "Path must contain atleast two tokens");
     require(
       exchangePath.length == tokenPath.length - 1,
@@ -95,10 +106,11 @@ contract Minima is Ownable {
     );
 
     expectedOut = amountIn;
-    for (uint256 i = 0; i < exchangePath.length; i++) {
+    uint256 i = 0;
+    while (i < exchangePath.length && exchangePath[i] != address(0)) {
       expectedOut = IWrapper(exchangePath[i]).getQuote(
         tokenPath[i],
-        tokenPath[i + 1],
+        tokenPath[++i],
         expectedOut
       );
     }
@@ -121,24 +133,16 @@ contract Minima is Ownable {
     uint256 tokenOutIndex = getTokenIndex(tokenOut);
 
     (
-      int256[][] memory exchangeRates,
       address[][] memory exchanges,
-      int256[] memory pathTo,
       uint256[] memory parents,
       bool arbExists
     ) = fillBoard(tokenFromIndex);
-
     (
-      address[] memory tokenPath,
-      address[] memory exchangePath
-    ) = getPathFromBoard(
-        tokenFromIndex,
-        tokenOutIndex,
-        exchangeRates,
-        exchanges,
-        pathTo,
-        parents
-      );
+      address[] memory _tokenPath,
+      address[] memory _exchangePath
+    ) = getPathFromBoard(tokenFromIndex, tokenOutIndex, exchanges, parents);
+    tokenPath = _tokenPath;
+    exchangePath = _exchangePath;
     amountOut = getExpectedOutFromPath(tokenPath, exchangePath, amountIn);
   }
 
@@ -146,16 +150,14 @@ contract Minima is Ownable {
     public
     view
     returns (
-      int256[][] memory exchangeRates,
       address[][] memory exchanges,
-      int256[] memory pathTo,
       uint256[] memory parents,
       bool arbExists
     )
   {
-    exchangeRates = new int256[][](numTokens);
+    int256[][] memory exchangeRates = new int256[][](numTokens);
+    int256[] memory pathTo = new int256[](numTokens);
     exchanges = new address[][](numTokens);
-    pathTo = new int256[](numTokens);
     parents = new uint256[](numTokens);
 
     for (uint256 i = 0; i < numTokens; i++) {
@@ -165,33 +167,39 @@ contract Minima is Ownable {
       if (i == tokenFromIndex) {
         pathTo[i] = 0;
       }
-      for (uint256 i = 0; i < numTokens; i++) {
-        ERC20 tokenIn = ERC20(supportedTokens[i]);
-        for (uint256 j = 0; j < numTokens; j++) {
-          (int256 rate, address exchange) = getBestExchange(
-            address(tokenIn),
-            supportedTokens[j],
-            10**tokenIn.decimals()
-          );
-          exchanges[i][j] = exchange;
-          exchangeRates[i][j] = OpenMath.log2(-1 * rate);
-        }
+      ERC20 tokenIn = ERC20(supportedTokens[i]);
+      uint256 decimals = 10**tokenIn.decimals();
+      for (uint256 j = 0; j < numTokens; j++) {
+        (uint256 rate, address exchange) = getBestExchange(
+          supportedTokens[i],
+          supportedTokens[j],
+          100 * decimals
+        );
+        exchanges[i][j] = exchange;
+        exchangeRates[i][j] = rate == 0
+          ? OpenMath.MAX_INT
+          : -1 * OpenMath.log_2(rate);
       }
     }
 
+    uint256 iteration = 0;
     {
       bool improved = true;
-      uint256 iteration = 0;
       while (iteration < numTokens && improved) {
         improved = false;
         iteration++;
         for (uint256 i = 0; i < numTokens; i++) {
           int256 curCost = pathTo[i];
-          for (uint256 j = 0; j < numTokens; j++) {
-            if (curCost + exchangeRates[i][j] < pathTo[j]) {
-              pathTo[j] = curCost + exchangeRates[i][j];
-              improved = true;
-              parents[j] = i;
+          if (curCost != OpenMath.MAX_INT) {
+            for (uint256 j = 0; j < numTokens; j++) {
+              if (
+                exchangeRates[i][j] < OpenMath.MAX_INT &&
+                curCost + exchangeRates[i][j] < pathTo[j]
+              ) {
+                pathTo[j] = curCost + exchangeRates[i][j];
+                improved = true;
+                parents[j] = i;
+              }
             }
           }
         }
@@ -205,40 +213,36 @@ contract Minima is Ownable {
   function getPathFromBoard(
     uint256 tokenFromIndex,
     uint256 tokenOutIndex,
-    int256[][] memory exchangeRates,
     address[][] memory exchanges,
-    int256[] memory pathTo,
     uint256[] memory parents
   )
     public
     view
     returns (address[] memory tokenPath, address[] memory exchangePath)
   {
+    address[] memory backPath = new address[](numTokens);
+    address[] memory backExchPath = new address[](numTokens - 1);
     tokenPath = new address[](numTokens);
-    exchangePath = new address[](numTokens);
+    exchangePath = new address[](numTokens - 1);
     uint256 curIndex = tokenOutIndex;
     uint256 iterations = 0;
 
     while (curIndex != tokenFromIndex) {
       require(iterations < numTokens, "No path exists");
       uint256 parent = parents[curIndex];
-      tokenPath[iterations] = supportedTokens[curIndex];
-      exchangePath[iterations++] = exchanges[parent][curIndex];
+      backPath[iterations] = supportedTokens[curIndex];
+      backExchPath[iterations++] = exchanges[parent][curIndex];
       curIndex = parent;
     }
-    tokenPath[iterations++] = supportedTokens[tokenFromIndex];
-    for (uint256 i = 0; i <= iterations / 2; i++) {
-      address tmp = tokenPath[i];
-      tokenPath[i] = tokenPath[tokenPath.length - i];
-      tokenPath[tokenPath.length - i] = tmp;
-      if (i <= exchangePath.length / 2) {
-        tmp = exchangePath[i];
-        exchangePath[i] = exchangePath[exchangePath.length - i];
-        exchangePath[exchangePath.length - i] = tmp;
-      }
+
+    tokenPath[0] = supportedTokens[tokenFromIndex];
+    for (uint256 i = 1; i <= iterations; i++) {
+      tokenPath[i] = backPath[iterations - i];
+      exchangePath[i - 1] = backExchPath[iterations - i];
     }
   }
 
+  // To do - add check for 0x0 address in exchangePath
   function swap(
     address[] memory tokenPath,
     address[] memory exchangePath,
@@ -257,11 +261,12 @@ contract Minima is Ownable {
       "Transfer failed"
     );
     actualAmountOut = amountIn;
-    for (uint256 i = 0; i < exchangePath.length; i++) {
-      inputToken = IERC20(tokenPath[i]);
-      IERC20 outToken = IERC20(tokenPath[i + 1]);
-      uint256 startingBalance = outToken.balanceOf(address(this));
+    uint256 i = 0;
+    while (i < exchangePath.length && exchangePath[i] != address(0)) {
       address exchange = exchangePath[i];
+      inputToken = IERC20(tokenPath[i]);
+      IERC20 outToken = IERC20(tokenPath[++i]);
+      uint256 startingBalance = outToken.balanceOf(address(this));
       require(inputToken.approve(exchange, actualAmountOut), "Approval failed");
 
       IWrapper(exchange).swap(
@@ -276,16 +281,8 @@ contract Minima is Ownable {
     actualAmountOut -= swapFee;
 
     require(actualAmountOut >= minAmountOut, "Slippage was too high");
-    IERC20(tokenPath[tokenPath.length - 1]).transfer(
-      recipient,
-      actualAmountOut
-    );
-    emit Swap(
-      tokenPath[0],
-      tokenPath[tokenPath.length - 1],
-      amountIn,
-      actualAmountOut
-    );
+    IERC20(tokenPath[i]).transfer(recipient, actualAmountOut);
+    emit Swap(tokenPath[0], tokenPath[i], amountIn, actualAmountOut);
   }
 
   function swapOnChain(
@@ -298,25 +295,14 @@ contract Minima is Ownable {
     uint256 tokenFromIndex = getTokenIndex(tokenIn);
     uint256 tokenOutIndex = getTokenIndex(tokenOut);
 
-    (
-      int256[][] memory exchangeRates,
-      address[][] memory exchanges,
-      int256[] memory pathTo,
-      uint256[] memory parents,
-
-    ) = fillBoard(tokenFromIndex);
+    (address[][] memory exchanges, uint256[] memory parents, ) = fillBoard(
+      tokenFromIndex
+    );
 
     (
       address[] memory tokenPath,
       address[] memory exchangePath
-    ) = getPathFromBoard(
-        tokenFromIndex,
-        tokenOutIndex,
-        exchangeRates,
-        exchanges,
-        pathTo,
-        parents
-      );
+    ) = getPathFromBoard(tokenFromIndex, tokenOutIndex, exchanges, parents);
     return swap(tokenPath, exchangePath, amountIn, minAmountOut, recipient);
   }
 }

@@ -12,7 +12,7 @@ import "hardhat-spdx-license-identifier";
 import { HardhatUserConfig, task } from "hardhat/config";
 import { HDAccountsUserConfig } from "hardhat/types";
 import "solidity-coverage";
-import { Minima, MobiusWrapper } from "./typechain-types";
+import { Minima, MobiusWrapper, UbeswapWrapper } from "./typechain-types";
 
 task(
   "addMobiusSwaps",
@@ -32,6 +32,30 @@ task(
     console.log(txns);
   }
 ).addParam("pools", "The addresses of mobius pools, comma separated");
+
+task(
+  "addTokenPairs",
+  "Adds token pairs to the sushiv2 wrappers",
+  async (taskArguments: { pairs: string }, hre, runSuper) => {
+    const { pairs } = taskArguments;
+    const addresses = pairs.split("/").map((s) => s.trim().split(","));
+    const ubeswap = <UbeswapWrapper>(
+      await hre.ethers.getContract("UbeswapWrapper")
+    );
+    for (let i = 0; i < addresses.length; i++) {
+      const addressList = addresses[i];
+      for (let j = 0; j < addressList.length; j++) {
+        for (let k = j + 1; k < addressList.length; k++) {
+          const txn = await ubeswap.addTokenPair(
+            addressList[j],
+            addressList[k]
+          );
+          console.log(txn);
+        }
+      }
+    }
+  }
+).addParam("pairs", "The addresses of mobius pools, comma separated");
 
 task(
   "add-dex",
