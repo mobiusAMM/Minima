@@ -19,24 +19,15 @@ export interface OpenMathInterface extends utils.Interface {
   contractName: "OpenMath";
   functions: {
     "exchangeRate(uint256,uint256)": FunctionFragment;
-    "safeUnsignedToSigned(uint256)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "exchangeRate",
     values: [BigNumberish, BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "safeUnsignedToSigned",
-    values: [BigNumberish]
-  ): string;
 
   decodeFunctionResult(
     functionFragment: "exchangeRate",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "safeUnsignedToSigned",
     data: BytesLike
   ): Result;
 
@@ -76,11 +67,6 @@ export interface OpenMath extends BaseContract {
       amountOut: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { exchange: BigNumber }>;
-
-    safeUnsignedToSigned(
-      unsigned: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
   };
 
   exchangeRate(
@@ -89,20 +75,10 @@ export interface OpenMath extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  safeUnsignedToSigned(
-    unsigned: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   callStatic: {
     exchangeRate(
       amountIn: BigNumberish,
       amountOut: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    safeUnsignedToSigned(
-      unsigned: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
@@ -115,22 +91,12 @@ export interface OpenMath extends BaseContract {
       amountOut: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    safeUnsignedToSigned(
-      unsigned: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     exchangeRate(
       amountIn: BigNumberish,
       amountOut: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    safeUnsignedToSigned(
-      unsigned: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

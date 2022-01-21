@@ -11,12 +11,12 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Minima is Ownable {
   using OpenMath for *;
-  address[] dexs;
-  address[] supportedTokens;
-  mapping(address => bool) dexKnown;
-  uint256 numTokens;
-  uint256 fee = 5 * (10**7);
-  uint256 FEE_DENOM = 10**10;
+  address[] public dexs;
+  address[] public supportedTokens;
+  mapping(address => bool) public dexKnown;
+  uint256 public numTokens;
+  uint256 public fee = 5 * (10**7);
+  uint256 public FEE_DENOM = 10**10;
 
   event FeeUpdated(address owner, uint256 oldFee, uint256 newFee);
   event FeesClaimed(address owner);

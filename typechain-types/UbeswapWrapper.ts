@@ -20,37 +20,32 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface UbeswapWrapperInterface extends utils.Interface {
   contractName: "UbeswapWrapper";
   functions: {
-    "addSupportedTokens(address[])": FunctionFragment;
+    "addTokenPair(address,address)": FunctionFragment;
     "getQuote(address,address,uint256)": FunctionFragment;
-    "getQuotes(address,uint256)": FunctionFragment;
     "owner()": FunctionFragment;
+    "removeTokenPair(address,address)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
-    "supportedTokens(uint256)": FunctionFragment;
     "swap(address,address,uint256,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "ubeswap()": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "addSupportedTokens",
-    values: [string[]]
+    functionFragment: "addTokenPair",
+    values: [string, string]
   ): string;
   encodeFunctionData(
     functionFragment: "getQuote",
     values: [string, string, BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "getQuotes",
-    values: [string, BigNumberish]
-  ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "removeTokenPair",
+    values: [string, string]
+  ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "supportedTokens",
-    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "swap",
@@ -63,18 +58,17 @@ export interface UbeswapWrapperInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "ubeswap", values?: undefined): string;
 
   decodeFunctionResult(
-    functionFragment: "addSupportedTokens",
+    functionFragment: "addTokenPair",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getQuote", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getQuotes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "renounceOwnership",
+    functionFragment: "removeTokenPair",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "supportedTokens",
+    functionFragment: "renounceOwnership",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
@@ -127,8 +121,9 @@ export interface UbeswapWrapper extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    addSupportedTokens(
-      tokens: string[],
+    addTokenPair(
+      token1: string,
+      token2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -139,27 +134,17 @@ export interface UbeswapWrapper extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    getQuotes(
-      tokenIn: string,
-      amountIn: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber[], string[]] & {
-        expectedOut: BigNumber[];
-        tokensOut: string[];
-      }
-    >;
-
     owner(overrides?: CallOverrides): Promise<[string]>;
+
+    removeTokenPair(
+      token1: string,
+      token2: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    supportedTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
 
     swap(
       tokenIn: string,
@@ -177,8 +162,9 @@ export interface UbeswapWrapper extends BaseContract {
     ubeswap(overrides?: CallOverrides): Promise<[string]>;
   };
 
-  addSupportedTokens(
-    tokens: string[],
+  addTokenPair(
+    token1: string,
+    token2: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -189,24 +175,17 @@ export interface UbeswapWrapper extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  getQuotes(
-    tokenIn: string,
-    amountIn: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber[], string[]] & { expectedOut: BigNumber[]; tokensOut: string[] }
-  >;
-
   owner(overrides?: CallOverrides): Promise<string>;
+
+  removeTokenPair(
+    token1: string,
+    token2: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   renounceOwnership(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
-
-  supportedTokens(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
 
   swap(
     tokenIn: string,
@@ -224,8 +203,9 @@ export interface UbeswapWrapper extends BaseContract {
   ubeswap(overrides?: CallOverrides): Promise<string>;
 
   callStatic: {
-    addSupportedTokens(
-      tokens: string[],
+    addTokenPair(
+      token1: string,
+      token2: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -236,25 +216,15 @@ export interface UbeswapWrapper extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getQuotes(
-      tokenIn: string,
-      amountIn: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber[], string[]] & {
-        expectedOut: BigNumber[];
-        tokensOut: string[];
-      }
-    >;
-
     owner(overrides?: CallOverrides): Promise<string>;
 
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    supportedTokens(
-      arg0: BigNumberish,
+    removeTokenPair(
+      token1: string,
+      token2: string,
       overrides?: CallOverrides
-    ): Promise<string>;
+    ): Promise<void>;
+
+    renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
     swap(
       tokenIn: string,
@@ -284,8 +254,9 @@ export interface UbeswapWrapper extends BaseContract {
   };
 
   estimateGas: {
-    addSupportedTokens(
-      tokens: string[],
+    addTokenPair(
+      token1: string,
+      token2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -296,21 +267,16 @@ export interface UbeswapWrapper extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getQuotes(
-      tokenIn: string,
-      amountIn: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
-    renounceOwnership(
+    removeTokenPair(
+      token1: string,
+      token2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    supportedTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
+    renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     swap(
@@ -330,8 +296,9 @@ export interface UbeswapWrapper extends BaseContract {
   };
 
   populateTransaction: {
-    addSupportedTokens(
-      tokens: string[],
+    addTokenPair(
+      token1: string,
+      token2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -342,21 +309,16 @@ export interface UbeswapWrapper extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getQuotes(
-      tokenIn: string,
-      amountIn: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    renounceOwnership(
+    removeTokenPair(
+      token1: string,
+      token2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    supportedTokens(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
+    renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     swap(

@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: ISC
-
-//SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
 import "./IWrapper.sol";
@@ -25,7 +23,7 @@ interface ILendingPool {
 contract MoolaWrapper is IWrapper, Ownable {
   ILendingPool lendingPool =
     ILendingPool(0x970b12522CA9b4054807a2c5B736149a5BE6f670);
-  mapping(address => address) pairs; // underlying => receiptToken
+  mapping(address => address) pairs; // underlying  => receiptToken
 
   function addAsset(address underlying, address receiptToken)
     external
@@ -60,7 +58,7 @@ contract MoolaWrapper is IWrapper, Ownable {
     uint256 amountIn
   ) external view override returns (uint256) {
     if (pairs[tokenIn] == tokenOut || pairs[tokenOut] == tokenIn) {
-      return 1; // The asset pair exists, so in one atomic action can be swapped 1:1
+      return amountIn; // The asset pair exists, so in one atomic action can be swapped 1:1
     }
     return 0;
   }
@@ -75,7 +73,7 @@ contract MoolaWrapper is IWrapper, Ownable {
       tokenIn,
       tokenOut
     );
-    require(pairs[underlying] == pairs[receipt], "Pair does not exist");
+    require(pairs[underlying] == receipt, "Pair does not exist");
 
     IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
     require(

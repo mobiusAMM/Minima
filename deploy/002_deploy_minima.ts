@@ -14,6 +14,7 @@ const deployMinima: DeployFunction = async function ({
   });
   const ubeswap = await deployments.get("UbeswapWrapper");
   const mobius = await deployments.get("MobiusWrapper");
+  const moola = await deployments.get("MoolaWrapper");
   const tokens = {
     Celo: "0x471EcE3750Da237f93B8E339c536989b8978a438",
     cUSD: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
@@ -25,7 +26,7 @@ const deployMinima: DeployFunction = async function ({
 
   await deploy("Minima", {
     from: deployer,
-    args: [Object.values(tokens), [ubeswap.address, mobius.address]],
+    args: [Object.values(tokens), [ubeswap.address, moola.address]],
     log: true,
     libraries: {
       OpenMath: openMath.address,

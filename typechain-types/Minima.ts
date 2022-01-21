@@ -20,26 +20,37 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface MinimaInterface extends utils.Interface {
   contractName: "Minima";
   functions: {
+    "FEE_DENOM()": FunctionFragment;
     "addDex(address,string)": FunctionFragment;
     "addToken(address)": FunctionFragment;
+    "dexKnown(address)": FunctionFragment;
+    "dexs(uint256)": FunctionFragment;
+    "fee()": FunctionFragment;
     "fillBoard(uint256)": FunctionFragment;
     "getBestExchange(address,address,uint256)": FunctionFragment;
     "getExpectedOut(address,address,uint256)": FunctionFragment;
+    "getExpectedOutFromPath(address[],address[],uint256)": FunctionFragment;
     "getFees()": FunctionFragment;
-    "getPathFromBoard(uint256,uint256,int256[][],address[][],int256[],uint256[])": FunctionFragment;
+    "getPathFromBoard(uint256,uint256,address[][],uint256[])": FunctionFragment;
+    "numTokens()": FunctionFragment;
     "owner()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
+    "supportedTokens(uint256)": FunctionFragment;
     "swap(address[],address[],uint256,uint256,address)": FunctionFragment;
     "swapOnChain(address,address,uint256,uint256,address)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "updateFee(uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(functionFragment: "FEE_DENOM", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "addDex",
     values: [string, string]
   ): string;
   encodeFunctionData(functionFragment: "addToken", values: [string]): string;
+  encodeFunctionData(functionFragment: "dexKnown", values: [string]): string;
+  encodeFunctionData(functionFragment: "dexs", values: [BigNumberish]): string;
+  encodeFunctionData(functionFragment: "fee", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "fillBoard",
     values: [BigNumberish]
@@ -52,22 +63,24 @@ export interface MinimaInterface extends utils.Interface {
     functionFragment: "getExpectedOut",
     values: [string, string, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "getExpectedOutFromPath",
+    values: [string[], string[], BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "getFees", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getPathFromBoard",
-    values: [
-      BigNumberish,
-      BigNumberish,
-      BigNumberish[][],
-      string[][],
-      BigNumberish[],
-      BigNumberish[]
-    ]
+    values: [BigNumberish, BigNumberish, string[][], BigNumberish[]]
   ): string;
+  encodeFunctionData(functionFragment: "numTokens", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "supportedTokens",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "swap",
@@ -86,8 +99,12 @@ export interface MinimaInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
 
+  decodeFunctionResult(functionFragment: "FEE_DENOM", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "addDex", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "addToken", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "dexKnown", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "dexs", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "fee", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "fillBoard", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getBestExchange",
@@ -97,14 +114,23 @@ export interface MinimaInterface extends utils.Interface {
     functionFragment: "getExpectedOut",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "getExpectedOutFromPath",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "getFees", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getPathFromBoard",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "numTokens", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "supportedTokens",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
@@ -205,6 +231,8 @@ export interface Minima extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    FEE_DENOM(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     addDex(
       dexAddress: string,
       name: string,
@@ -216,14 +244,18 @@ export interface Minima extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    dexKnown(arg0: string, overrides?: CallOverrides): Promise<[boolean]>;
+
+    dexs(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
+
+    fee(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     fillBoard(
       tokenFromIndex: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber[][], string[][], BigNumber[], BigNumber[], boolean] & {
-        exchangeRates: BigNumber[][];
+      [string[][], BigNumber[], boolean] & {
         exchanges: string[][];
-        pathTo: BigNumber[];
         parents: BigNumber[];
         arbExists: boolean;
       }
@@ -249,6 +281,13 @@ export interface Minima extends BaseContract {
       }
     >;
 
+    getExpectedOutFromPath(
+      tokenPath: string[],
+      exchangePath: string[],
+      amountIn: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { expectedOut: BigNumber }>;
+
     getFees(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -256,20 +295,25 @@ export interface Minima extends BaseContract {
     getPathFromBoard(
       tokenFromIndex: BigNumberish,
       tokenOutIndex: BigNumberish,
-      exchangeRates: BigNumberish[][],
       exchanges: string[][],
-      pathTo: BigNumberish[],
       parents: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<
       [string[], string[]] & { tokenPath: string[]; exchangePath: string[] }
     >;
 
+    numTokens(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    supportedTokens(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
     swap(
       tokenPath: string[],
@@ -300,6 +344,8 @@ export interface Minima extends BaseContract {
     ): Promise<ContractTransaction>;
   };
 
+  FEE_DENOM(overrides?: CallOverrides): Promise<BigNumber>;
+
   addDex(
     dexAddress: string,
     name: string,
@@ -311,14 +357,18 @@ export interface Minima extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  dexKnown(arg0: string, overrides?: CallOverrides): Promise<boolean>;
+
+  dexs(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+  fee(overrides?: CallOverrides): Promise<BigNumber>;
+
   fillBoard(
     tokenFromIndex: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber[][], string[][], BigNumber[], BigNumber[], boolean] & {
-      exchangeRates: BigNumber[][];
+    [string[][], BigNumber[], boolean] & {
       exchanges: string[][];
-      pathTo: BigNumber[];
       parents: BigNumber[];
       arbExists: boolean;
     }
@@ -344,6 +394,13 @@ export interface Minima extends BaseContract {
     }
   >;
 
+  getExpectedOutFromPath(
+    tokenPath: string[],
+    exchangePath: string[],
+    amountIn: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   getFees(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -351,20 +408,25 @@ export interface Minima extends BaseContract {
   getPathFromBoard(
     tokenFromIndex: BigNumberish,
     tokenOutIndex: BigNumberish,
-    exchangeRates: BigNumberish[][],
     exchanges: string[][],
-    pathTo: BigNumberish[],
     parents: BigNumberish[],
     overrides?: CallOverrides
   ): Promise<
     [string[], string[]] & { tokenPath: string[]; exchangePath: string[] }
   >;
 
+  numTokens(overrides?: CallOverrides): Promise<BigNumber>;
+
   owner(overrides?: CallOverrides): Promise<string>;
 
   renounceOwnership(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  supportedTokens(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string>;
 
   swap(
     tokenPath: string[],
@@ -395,6 +457,8 @@ export interface Minima extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    FEE_DENOM(overrides?: CallOverrides): Promise<BigNumber>;
+
     addDex(
       dexAddress: string,
       name: string,
@@ -403,14 +467,18 @@ export interface Minima extends BaseContract {
 
     addToken(newToken: string, overrides?: CallOverrides): Promise<void>;
 
+    dexKnown(arg0: string, overrides?: CallOverrides): Promise<boolean>;
+
+    dexs(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+    fee(overrides?: CallOverrides): Promise<BigNumber>;
+
     fillBoard(
       tokenFromIndex: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber[][], string[][], BigNumber[], BigNumber[], boolean] & {
-        exchangeRates: BigNumber[][];
+      [string[][], BigNumber[], boolean] & {
         exchanges: string[][];
-        pathTo: BigNumber[];
         parents: BigNumber[];
         arbExists: boolean;
       }
@@ -436,23 +504,35 @@ export interface Minima extends BaseContract {
       }
     >;
 
+    getExpectedOutFromPath(
+      tokenPath: string[],
+      exchangePath: string[],
+      amountIn: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getFees(overrides?: CallOverrides): Promise<void>;
 
     getPathFromBoard(
       tokenFromIndex: BigNumberish,
       tokenOutIndex: BigNumberish,
-      exchangeRates: BigNumberish[][],
       exchanges: string[][],
-      pathTo: BigNumberish[],
       parents: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<
       [string[], string[]] & { tokenPath: string[]; exchangePath: string[] }
     >;
 
+    numTokens(overrides?: CallOverrides): Promise<BigNumber>;
+
     owner(overrides?: CallOverrides): Promise<string>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
+    supportedTokens(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string>;
 
     swap(
       tokenPath: string[],
@@ -525,6 +605,8 @@ export interface Minima extends BaseContract {
   };
 
   estimateGas: {
+    FEE_DENOM(overrides?: CallOverrides): Promise<BigNumber>;
+
     addDex(
       dexAddress: string,
       name: string,
@@ -535,6 +617,12 @@ export interface Minima extends BaseContract {
       newToken: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    dexKnown(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    dexs(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+    fee(overrides?: CallOverrides): Promise<BigNumber>;
 
     fillBoard(
       tokenFromIndex: BigNumberish,
@@ -555,6 +643,13 @@ export interface Minima extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getExpectedOutFromPath(
+      tokenPath: string[],
+      exchangePath: string[],
+      amountIn: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getFees(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -562,17 +657,22 @@ export interface Minima extends BaseContract {
     getPathFromBoard(
       tokenFromIndex: BigNumberish,
       tokenOutIndex: BigNumberish,
-      exchangeRates: BigNumberish[][],
       exchanges: string[][],
-      pathTo: BigNumberish[],
       parents: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    numTokens(overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    supportedTokens(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     swap(
@@ -605,6 +705,8 @@ export interface Minima extends BaseContract {
   };
 
   populateTransaction: {
+    FEE_DENOM(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     addDex(
       dexAddress: string,
       name: string,
@@ -615,6 +717,18 @@ export interface Minima extends BaseContract {
       newToken: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    dexKnown(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    dexs(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    fee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     fillBoard(
       tokenFromIndex: BigNumberish,
@@ -635,6 +749,13 @@ export interface Minima extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    getExpectedOutFromPath(
+      tokenPath: string[],
+      exchangePath: string[],
+      amountIn: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     getFees(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
@@ -642,17 +763,22 @@ export interface Minima extends BaseContract {
     getPathFromBoard(
       tokenFromIndex: BigNumberish,
       tokenOutIndex: BigNumberish,
-      exchangeRates: BigNumberish[][],
       exchanges: string[][],
-      pathTo: BigNumberish[],
       parents: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    numTokens(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    supportedTokens(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     swap(

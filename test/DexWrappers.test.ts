@@ -1,42 +1,45 @@
-// import { expect } from "./chai-setup";
-// import {
-//   ethers,
-//   deployments,
-//   getUnnamedAccounts,
-//   getNamedAccounts,
-// } from "hardhat";
-// import { UbeswapWrapper, MobiusWrapper, IERC20 } from "../typechain";
-// import ERC20_ABI from "../build/abi/IERC20.json";
-// import { AccountClaimType } from "@celo/contractkit/lib/identity/claims/account";
-// import { BigNumber } from "@ethersproject/bignumber";
+import { expect } from "./chai-setup";
+import {
+  ethers,
+  deployments,
+  getUnnamedAccounts,
+  getNamedAccounts,
+} from "hardhat";
+import { UbeswapWrapper, MobiusWrapper, IERC20 } from "../typechain-types";
+import ERC20_ABI from "../build/abi/IERC20.json";
+import { AccountClaimType } from "@celo/contractkit/lib/identity/claims/account";
+import { BigNumber } from "@ethersproject/bignumber";
+import { MoolaWrapper } from "../typechain-types";
+import { EtherscanProvider } from "@ethersproject/providers";
 
-// const tokens = {
-//   Celo: "0x471EcE3750Da237f93B8E339c536989b8978a438",
-//   cUSD: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
-//   USDC: "0x2A3684e9Dc20B857375EA04235F2F7edBe818FA7",
-//   cEUR: "0xD8763CBa276a3738E6DE85b4b3bF5FDed6D6cA73",
-//   mcUSD: "0x918146359264C492BD6934071c6Bd31C854EDBc3",
-//   mobi: "0x73a210637f6F6B7005512677Ba6B3C96bb4AA44B",
-// };
+const tokens = {
+  Celo: "0x471EcE3750Da237f93B8E339c536989b8978a438",
+  cUSD: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
+  USDC: "0x2A3684e9Dc20B857375EA04235F2F7edBe818FA7",
+  cEUR: "0xD8763CBa276a3738E6DE85b4b3bF5FDed6D6cA73",
+  mcUSD: "0x918146359264C492BD6934071c6Bd31C854EDBc3",
+  mobi: "0x73a210637f6F6B7005512677Ba6B3C96bb4AA44B",
+};
 
-// const CUSD_USDC_SWAP = "0xA5037661989789d0310aC2B796fa78F1B01F195D";
-// // To Do: Redeploy mobius wrapper
-// const setup = async () => {
-//   const coins: { [name: string]: IERC20 } = {};
-//   const coinList = await Promise.all(
-//     Object.entries(tokens).map(
-//       async ([name, address]) =>
-//         <IERC20>await ethers.getContractAt(ERC20_ABI, address)
-//     )
-//   );
-//   coinList.forEach((coin, i) => (coins[Object.keys(tokens)[i]] = coin));
-//   return {
-//     UbeswapWrapper: <UbeswapWrapper>await ethers.getContract("UbeswapWrapper"),
-//     MobiusWrapper: <MobiusWrapper>await ethers.getContract("MobiusWrapper"),
-//     coins,
-//     signer: (await ethers.getSigners())[0],
-//   };
-// };
+const CUSD_USDC_SWAP = "0xA5037661989789d0310aC2B796fa78F1B01F195D";
+// To Do: Redeploy mobius wrapper
+const setup = async () => {
+  const coins: { [name: string]: IERC20 } = {};
+  const coinList = await Promise.all(
+    Object.entries(tokens).map(
+      async ([name, address]) =>
+        <IERC20>await ethers.getContractAt(ERC20_ABI, address)
+    )
+  );
+  coinList.forEach((coin, i) => (coins[Object.keys(tokens)[i]] = coin));
+  return {
+    UbeswapWrapper: <UbeswapWrapper>await ethers.getContract("UbeswapWrapper"),
+    MobiusWrapper: <MobiusWrapper>await ethers.getContract("MobiusWrapper"),
+    MoolaWrapper: <MoolaWrapper>await ethers.getContract("MoolaWrapper"),
+    coins,
+    signer: (await ethers.getSigners())[0],
+  };
+};
 
 // describe("UbeswapWrapper", function () {
 //   it("Queries trade rate of celo -> mcUSD", async function () {
@@ -104,6 +107,25 @@
 //       tokens.USDC,
 //       tokens.cUSD,
 //       "1",
+//       "0"
+//     );
+//     console.log(result);
+//   });
+// });
+
+// describe("Moola wrapper", function () {
+//   it("Performs a trade cUSD -> mcUSD", async function () {
+//     const {
+//       MoolaWrapper,
+//       coins: { cUSD },
+//       signer,
+//     } = await setup();
+//     const approval = await cUSD.approve(MoolaWrapper.address, "100");
+//     await approval.wait();
+//     const result = await MoolaWrapper.swap(
+//       tokens.cUSD,
+//       tokens.mcUSD,
+//       "10",
 //       "0"
 //     );
 //     console.log(result);
