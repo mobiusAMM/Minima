@@ -14,6 +14,7 @@ export type { IPair } from "./IPair";
 export type { IUbeswapRouter } from "./IUbeswapRouter";
 export type { UbeswapWrapper } from "./UbeswapWrapper";
 export type { Minima } from "./Minima";
+export type { MobiusBaseBurner } from "./MobiusBaseBurner";
 export type { OpenMath } from "./OpenMath";
 
 export { Ownable__factory } from "./factories/Ownable__factory";
@@ -29,4 +30,5 @@ export { IPair__factory } from "./factories/IPair__factory";
 export { IUbeswapRouter__factory } from "./factories/IUbeswapRouter__factory";
 export { UbeswapWrapper__factory } from "./factories/UbeswapWrapper__factory";
 export { Minima__factory } from "./factories/Minima__factory";
+export { MobiusBaseBurner__factory } from "./factories/MobiusBaseBurner__factory";
 export { OpenMath__factory } from "./factories/OpenMath__factory";
