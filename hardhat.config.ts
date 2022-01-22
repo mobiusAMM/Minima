@@ -49,6 +49,7 @@ task(
     await ubeswap.addTokenPair(tokens.Celo, tokens.mobi);
     await ubeswap.addTokenPair(tokens.Celo, tokens.wETH);
     await ubeswap.addTokenPair(tokens.Celo, tokens.wBTC);
+    await ubeswap.addTokenPair(tokens.mcUSD, tokens.mcEUR);
     await moolaWrapper.addAsset(tokens.cUSD, tokens.mcUSD);
     await moolaWrapper.addAsset(tokens.cEUR, tokens.mcEUR);
 
