@@ -15,11 +15,7 @@ contract Minima is Ownable {
   address[] public supportedTokens;
   mapping(address => bool) public dexKnown;
   uint256 public numTokens;
-  uint256 public fee = 0;
-  uint256 public FEE_DENOM = 10**10;
 
-  event FeeUpdated(address owner, uint256 oldFee, uint256 newFee);
-  event FeesClaimed(address owner);
   event TokenAdded(address token);
   event DexAdded(address dex, string name);
   event Swap(
