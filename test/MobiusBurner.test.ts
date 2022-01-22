@@ -1,13 +1,6 @@
 import { expect } from "./chai-setup";
+import { ethers } from "hardhat";
 import {
-  ethers,
-  deployments,
-  getUnnamedAccounts,
-  getNamedAccounts,
-} from "hardhat";
-import {
-  UbeswapWrapper,
-  MobiusWrapper,
   IERC20,
   MobiusBaseBurner,
   MobiusEthBurner,
@@ -15,10 +8,6 @@ import {
   MobiusEurBurner,
 } from "../typechain-types";
 import ERC20_ABI from "../build/abi/IERC20.json";
-import { AccountClaimType } from "@celo/contractkit/lib/identity/claims/account";
-import { BigNumber } from "@ethersproject/bignumber";
-import { MoolaWrapper } from "../typechain-types";
-import { EtherscanProvider } from "@ethersproject/providers";
 
 const tokens = {
   Celo: "0x471EcE3750Da237f93B8E339c536989b8978a438",
