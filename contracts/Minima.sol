@@ -15,7 +15,7 @@ contract Minima is Ownable {
   address[] public supportedTokens;
   mapping(address => bool) public dexKnown;
   uint256 public numTokens;
-  uint256 public fee = 5 * (10**7);
+  uint256 public fee = 0;
   uint256 public FEE_DENOM = 10**10;
 
   event FeeUpdated(address owner, uint256 oldFee, uint256 newFee);
@@ -54,19 +54,6 @@ contract Minima is Ownable {
     supportedTokens.push(newToken);
     numTokens++;
     emit TokenAdded(newToken);
-  }
-
-  function updateFee(uint256 _fee) external onlyOwner {
-    emit FeeUpdated(owner(), fee, _fee);
-    fee = _fee;
-  }
-
-  function getFees() external onlyOwner {
-    for (uint256 i = 0; i < numTokens; i++) {
-      IERC20 token = IERC20(supportedTokens[i]);
-      token.transfer(owner(), token.balanceOf(address(this)));
-    }
-    emit FeesClaimed(owner());
   }
 
   function getBestExchange(
@@ -277,9 +264,6 @@ contract Minima is Ownable {
       );
       actualAmountOut = outToken.balanceOf(address(this)) - startingBalance;
     }
-    uint256 swapFee = (actualAmountOut * fee) / FEE_DENOM;
-    actualAmountOut -= swapFee;
-
     require(actualAmountOut >= minAmountOut, "Slippage was too high");
     IERC20(tokenPath[i]).transfer(recipient, actualAmountOut);
     emit Swap(tokenPath[0], tokenPath[i], amountIn, actualAmountOut);
