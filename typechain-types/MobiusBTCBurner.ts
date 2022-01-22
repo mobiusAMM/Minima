@@ -16,8 +16,8 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
-export interface MobiusUsdBurnerInterface extends utils.Interface {
-  contractName: "MobiusUsdBurner";
+export interface MobiusBTCBurnerInterface extends utils.Interface {
+  contractName: "MobiusBTCBurner";
   functions: {
     "MinimaRouter()": FunctionFragment;
     "MobiusWrapper()": FunctionFragment;
@@ -149,13 +149,13 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
-export interface MobiusUsdBurner extends BaseContract {
-  contractName: "MobiusUsdBurner";
+export interface MobiusBTCBurner extends BaseContract {
+  contractName: "MobiusBTCBurner";
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: MobiusUsdBurnerInterface;
+  interface: MobiusBTCBurnerInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,

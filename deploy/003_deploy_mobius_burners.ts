@@ -26,18 +26,28 @@ const deployMinima: DeployFunction = async function ({
 
   const mobius = await deployments.get("MobiusWrapper");
   const minima = await deployments.get("Minima");
-  await deploy("MobiusBaseBurner", {
-    from: deployer,
-    args: [
-      EMERGENCY_OWNER,
-      RECEIVER,
-      RECOVERY_RECEIVER,
-      mobius.address,
-      minima.address,
-      BASE_TOKEN,
-    ],
-    log: true,
-  });
+
+  const BURNER_CONTRACTS = [
+    "MobiusUsdBurner",
+    "MobiusBTCBurner",
+    "MobiusCeloBurner",
+    "MobiusEthBurner",
+    "MobiusEurBurner",
+  ];
+
+  for (let i = 0; i < BURNER_CONTRACTS.length; i++) {
+    await deploy(BURNER_CONTRACTS[i], {
+      from: deployer,
+      args: [
+        EMERGENCY_OWNER,
+        RECEIVER,
+        RECOVERY_RECEIVER,
+        mobius.address,
+        minima.address,
+      ],
+      log: true,
+    });
+  }
 };
 
 export default deployMinima;
