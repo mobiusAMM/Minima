@@ -32,13 +32,12 @@ contract MobiusWrapper is IWrapper, Ownable {
   mapping(address => bool) public swapContained;
 
   function addSwapContract(address swapAddress, uint256 numTokens)
-    external
+    public
     onlyOwner
+    returns (bool)
   {
-    require(
-      !swapContained[swapAddress],
-      "Swap contract has already been added!"
-    );
+    if (swapContained[swapAddress]) return false;
+
     swapContained[swapAddress] = true;
 
     ISwap swap = ISwap(swapAddress);
@@ -57,6 +56,17 @@ contract MobiusWrapper is IWrapper, Ownable {
           tokenRoute[token_i][token_j] = swapAddress;
         }
       }
+    }
+    return true;
+  }
+
+  function addMultipleSwapContracts(
+    address[] calldata contracts,
+    uint256[] calldata numTokens
+  ) external onlyOwner {
+    require(contracts.length == numTokens.length, "Array lengths vary");
+    for (uint256 i = 0; i < contracts.length; i++) {
+      addSwapContract(contracts[i], numTokens[i]);
     }
   }
 

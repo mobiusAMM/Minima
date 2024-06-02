@@ -20,6 +20,7 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface MobiusWrapperInterface extends utils.Interface {
   contractName: "MobiusWrapper";
   functions: {
+    "addMultipleSwapContracts(address[],uint256[])": FunctionFragment;
     "addSwapContract(address,uint256)": FunctionFragment;
     "getQuote(address,address,uint256)": FunctionFragment;
     "getTradeIndices(address,address)": FunctionFragment;
@@ -31,6 +32,10 @@ export interface MobiusWrapperInterface extends utils.Interface {
     "transferOwnership(address)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "addMultipleSwapContracts",
+    values: [string[], BigNumberish[]]
+  ): string;
   encodeFunctionData(
     functionFragment: "addSwapContract",
     values: [string, BigNumberish]
@@ -65,6 +70,10 @@ export interface MobiusWrapperInterface extends utils.Interface {
     values: [string]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "addMultipleSwapContracts",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "addSwapContract",
     data: BytesLike
@@ -133,6 +142,12 @@ export interface MobiusWrapper extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    addMultipleSwapContracts(
+      contracts: string[],
+      numTokens: BigNumberish[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     addSwapContract(
       swapAddress: string,
       numTokens: BigNumberish,
@@ -185,6 +200,12 @@ export interface MobiusWrapper extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
+
+  addMultipleSwapContracts(
+    contracts: string[],
+    numTokens: BigNumberish[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   addSwapContract(
     swapAddress: string,
@@ -239,11 +260,17 @@ export interface MobiusWrapper extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    addMultipleSwapContracts(
+      contracts: string[],
+      numTokens: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     addSwapContract(
       swapAddress: string,
       numTokens: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<boolean>;
 
     getQuote(
       tokenIn: string,
@@ -302,6 +329,12 @@ export interface MobiusWrapper extends BaseContract {
   };
 
   estimateGas: {
+    addMultipleSwapContracts(
+      contracts: string[],
+      numTokens: BigNumberish[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     addSwapContract(
       swapAddress: string,
       numTokens: BigNumberish,
@@ -350,6 +383,12 @@ export interface MobiusWrapper extends BaseContract {
   };
 
   populateTransaction: {
+    addMultipleSwapContracts(
+      contracts: string[],
+      numTokens: BigNumberish[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     addSwapContract(
       swapAddress: string,
       numTokens: BigNumberish,

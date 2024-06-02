@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: ISC
+
 pragma solidity ^0.8.0;
 
 import "./AMMs/IWrapper.sol";
@@ -11,10 +13,10 @@ contract MobiusBaseBurner is Ownable {
 
   IERC20 baseToken;
   IERC20 constant MOBI = IERC20(0x73a210637f6F6B7005512677Ba6B3C96bb4AA44B);
-  uint256 constant MAX_UINT = uint256(-1);
+  uint256 constant MAX_UINT = 2**256 - 1;
 
-  IWrapper MobiusWrapper;
-  Minima MinimaRouter;
+  IWrapper public MobiusWrapper;
+  Minima public MinimaRouter;
   mapping(address => mapping(address => bool)) isApproved;
 
   address public emergencyOwner;
@@ -38,7 +40,7 @@ contract MobiusBaseBurner is Ownable {
     baseToken = _baseToken;
 
     // Set max approval to the Minima Router for baseToken
-    baseToken.safeApprove(address(router), MAX_UINT);
+    baseToken.safeApprove(address(_router), MAX_UINT);
   }
 
   modifier isLive() {
@@ -47,22 +49,25 @@ contract MobiusBaseBurner is Ownable {
   }
 
   modifier ownerOrEmergency() {
-    require(msg.sender == owner || msg.sender == emergencyOwner, "Only owner");
+    require(
+      msg.sender == owner() || msg.sender == emergencyOwner,
+      "Only owner"
+    );
     _;
   }
 
   function burn(IERC20 coin) external isLive returns (bool) {
-    uint256 amount = coin.balanceOf(account);
+    uint256 amount = coin.balanceOf(msg.sender);
     uint256 amountBase;
-    if (amount > 0) {
-      coin.safeTransferFrom(msg.sender, address(this), amount);
-    }
+    if (amount == 0) return false;
+
+    coin.safeTransferFrom(msg.sender, address(this), amount);
 
     // If the token is not baseToken, then first swap into baseToken through the Mobius pools
     if (address(coin) != address(baseToken)) {
       if (!isApproved[address(coin)][address(MobiusWrapper)]) {
-        coin.approve(address(MobiusWrapper), MAX_UINT);
-        isApproved[address(coin)] = true;
+        coin.safeApprove(address(MobiusWrapper), MAX_UINT);
+        isApproved[address(coin)][address(MobiusWrapper)] = true;
       }
       MobiusWrapper.swap(address(coin), address(baseToken), amount, 0);
     }
@@ -72,7 +77,7 @@ contract MobiusBaseBurner is Ownable {
       address(MOBI),
       baseToken.balanceOf(address(this)),
       0,
-      block.timestamp + 10
+      address(this)
     );
 
     MOBI.safeTransfer(receiver, MOBI.balanceOf(address(this)));
@@ -88,27 +93,31 @@ contract MobiusBaseBurner is Ownable {
     baseToken.approve(minimaAddress, MAX_UINT);
   }
 
-  function recover_balance(IERC20 coin) external returns (bool) {
-    require(msg.sender == owner || msg.sender == emergencyOwner, "Only owner");
+  function recover_balance(IERC20 coin)
+    external
+    ownerOrEmergency
+    returns (bool)
+  {
     coin.transfer(recoveryReceiver, coin.balanceOf(address(this)));
     return true;
   }
 
-  function setRecovery(address newRecovery) onlyOwner {
+  function setRecovery(address newRecovery) external onlyOwner {
     recoveryReceiver = newRecovery;
   }
 
-  function setReciever(address newReciever) onlyOwner {
+  function setReciever(address newReciever) external onlyOwner {
     receiver = newReciever;
   }
 
-  function setKilled(bool isKilled) {
-    require(msg.sender == owner || msg.sender == emergencyOwner, "Only owner");
+  function setKilled(bool isKilled) external ownerOrEmergency {
     is_killed = true;
   }
 
-  function setEmergencyOwner(address newEmergencyOwner) {
-    require(msg.sender == owner || msg.sender == emergencyOwner, "Only owner");
+  function setEmergencyOwner(address newEmergencyOwner)
+    external
+    ownerOrEmergency
+  {
     emergencyOwner = newEmergencyOwner;
   }
 }
